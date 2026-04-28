@@ -1,0 +1,134 @@
+{
+  "$schema": "https://raw.githubusercontent.com/g-shevchenko/geo-audit/main/trust/manifest.schema.json",
+  "manifest_version": "1.0",
+  "tool": {
+    "name": "geo-audit",
+    "repository": "https://github.com/g-shevchenko/geo-audit",
+    "version": "0.1.0",
+    "license": "MIT",
+    "author": "Humanswith.ai (FZCO)",
+    "contact": "security@humanswith.ai"
+  },
+  "install": {
+    "requires_sudo": false,
+    "modifies_shell_init": false,
+    "modifies_path": false,
+    "global_pip_install": false,
+    "global_npm_install": false,
+    "writes_to": [
+      ".venv/",
+      "node_modules/",
+      "~/.cache/geo-audit/"
+    ],
+    "max_install_time_seconds": 180,
+    "preinstall_checker": "scripts/agent-preinstall-check.sh"
+  },
+  "runtime": {
+    "telemetry": "none",
+    "phone_home": false,
+    "background_processes": [],
+    "default_offline": true,
+    "network_calls_audit_target_only": true,
+    "external_apis_optional": [
+      {
+        "service": "Google PageSpeed Insights",
+        "endpoint": "https://pagespeed.googleapis.com/*",
+        "module": "technical",
+        "required": false,
+        "free_tier": true,
+        "env_var": "PAGESPEED_API_KEY"
+      },
+      {
+        "service": "OpenAI API",
+        "endpoint": "https://api.openai.com/*",
+        "module": "brand-mentions",
+        "required": false,
+        "free_tier": false,
+        "env_var": "OPENAI_API_KEY"
+      },
+      {
+        "service": "Anthropic API",
+        "endpoint": "https://api.anthropic.com/*",
+        "module": "brand-mentions",
+        "required": false,
+        "free_tier": false,
+        "env_var": "ANTHROPIC_API_KEY"
+      },
+      {
+        "service": "Perplexity API",
+        "endpoint": "https://api.perplexity.ai/*",
+        "module": "brand-mentions",
+        "required": false,
+        "free_tier": false,
+        "env_var": "PERPLEXITY_API_KEY"
+      },
+      {
+        "service": "Tavily Search",
+        "endpoint": "https://api.tavily.com/*",
+        "module": "brand-mentions",
+        "required": false,
+        "free_tier": true,
+        "env_var": "TAVILY_API_KEY"
+      },
+      {
+        "service": "Schema.org Validator",
+        "endpoint": "https://validator.schema.org/*",
+        "module": "schema",
+        "required": false,
+        "free_tier": true,
+        "env_var": null
+      }
+    ],
+    "fallback_on_missing_keys": "graceful_degradation_with_warning"
+  },
+  "secrets_policy": {
+    "hardcoded_credentials": "forbidden",
+    "scan_in_ci": true,
+    "scan_script": "scripts/public-release-audit.sh",
+    "banned_patterns": [
+      "github_pat_*",
+      "ghp_*",
+      "ghs_*",
+      "ghu_*",
+      "ghr_*",
+      "sk-[a-zA-Z0-9]{20,}",
+      "hf_*",
+      "x-access-token: *",
+      "authorization: bearer *"
+    ]
+  },
+  "private_infrastructure_policy": {
+    "no_internal_references": true,
+    "banned_terms": [
+      "greg-personal-claude",
+      "hwai-internal",
+      "claude/CREDENTIALS",
+      "hwai-ops.xyz",
+      "172.245.*",
+      "159.195.*",
+      "193.188.*",
+      "185.217.*",
+      "r2-d2",
+      "requests.jsonl",
+      "feedback.jsonl"
+    ]
+  },
+  "release_provenance": {
+    "tagged_releases": "https://github.com/g-shevchenko/geo-audit/releases",
+    "checksums": "sha256",
+    "attestation": "GitHub artifact attestation (SLSA Level 2)",
+    "verify_command": "gh attestation verify <artifact> -R g-shevchenko/geo-audit"
+  },
+  "ci": {
+    "preinstall_check_on_pr": ".github/workflows/preinstall-check.yml",
+    "openssf_scorecard": ".github/workflows/scorecard.yml",
+    "dependabot": ".github/dependabot.yml",
+    "third_party_actions_pinned": "by SHA"
+  },
+  "audit_trail": {
+    "manifest_first_published": "2026-04-28",
+    "manifest_last_updated": "2026-04-28",
+    "trust_md_human_readable": "TRUST.md",
+    "release_audit_doc": "PUBLIC_RELEASE_AUDIT.md"
+  }
+}

@@ -14,10 +14,10 @@ echo
 
 errors=0
 
-# 1. No curl-pipe-bash patterns in scripts (excluding the check script itself)
+# 1. No curl-pipe-bash patterns in scripts (excluding audit scripts themselves)
 echo "  [1/5] no curl-pipe-bash installers..."
 if grep -rE 'curl.*\|.*bash|wget.*\|.*sh' scripts/ 2>/dev/null \
-     | grep -v "agent-preinstall-check.sh"; then
+     | grep -vE "agent-preinstall-check\.sh|public-release-audit\.sh"; then
   echo "    FAIL: curl-pipe-bash detected"
   errors=$((errors + 1))
 else

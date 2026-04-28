@@ -1,0 +1,56 @@
+name: Preinstall trust check
+
+# Runs the same trust check we ask users to run before installing.
+# If this job fails on a PR, the PR is not safe to merge.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preinstall-check:
+    name: scripts/agent-preinstall-check.sh
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Run preinstall trust check
+        run: |
+          chmod +x scripts/*.sh
+          bash scripts/agent-preinstall-check.sh
+
+  release-audit:
+    name: scripts/public-release-audit.sh
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Run public release audit
+        run: |
+          chmod +x scripts/*.sh
+          bash scripts/public-release-audit.sh

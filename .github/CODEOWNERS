@@ -1,0 +1,16 @@
+# CODEOWNERS for geo-audit
+# Every PR requires review from a maintainer before merge.
+
+# Default — Greg reviews everything until v0.5 community grows
+*                       @g-shevchenko
+
+# Trust posture — extra-strict review (security@humanswith.ai also notified out-of-band)
+/TRUST.md               @g-shevchenko
+/SECURITY.md            @g-shevchenko
+/PUBLIC_RELEASE_AUDIT.md @g-shevchenko
+/trust/                 @g-shevchenko
+/scripts/               @g-shevchenko
+/.github/               @g-shevchenko
+
+# Methodology — score-formula changes are RFC-gated
+/docs/methodology.md    @g-shevchenko

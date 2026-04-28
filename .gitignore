@@ -1,0 +1,64 @@
+# Local environments
+.venv/
+venv/
+env/
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Local cache & runtime
+.cache/
+~/.cache/geo-audit/  # not actually here, but be explicit
+*.log
+*.tmp
+report.pdf
+report.json
+actions.md
+
+# Secrets — should never be checked in
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials.json
+secrets.yaml
+api-keys.json
+
+# Test outputs
+.coverage
+htmlcov/
+.tox/
+coverage.xml
+*.cover
+
+# Playwright
+playwright-report/
+test-results/
+playwright/.cache/
+
+# Release artifacts (built locally)
+*.tar.gz
+*.zip
+*.sha256
+*.sig
+sbom.json
