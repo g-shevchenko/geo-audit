@@ -4,7 +4,7 @@
   "tool": {
     "name": "geo-audit",
     "repository": "https://github.com/g-shevchenko/geo-audit",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "license": "MIT",
     "author": "Humanswith.ai (FZCO)",
     "contact": "security@humanswith.ai"
@@ -17,8 +17,9 @@
     "global_npm_install": false,
     "writes_to": [
       ".venv/",
-      "node_modules/",
-      "~/.cache/geo-audit/"
+      ".env",
+      "~/.cache/geo-audit/",
+      "<output-dir>/"
     ],
     "max_install_time_seconds": 180,
     "preinstall_checker": "scripts/agent-preinstall-check.sh"
@@ -28,7 +29,7 @@
     "phone_home": false,
     "background_processes": [],
     "default_offline": true,
-    "network_calls_audit_target_only": true,
+    "network_calls_documentation": "Calls go to (a) the audit target URL plus its /robots.txt, /sitemap.xml, /llms.txt, /llms-full.txt, and (b) any optional third-party API the user explicitly enabled by setting the corresponding env var.",
     "external_apis_optional": [
       {
         "service": "Google PageSpeed Insights",
@@ -59,24 +60,64 @@
         "endpoint": "https://api.perplexity.ai/*",
         "module": "brand-mentions",
         "required": false,
-        "free_tier": false,
+        "free_tier": true,
         "env_var": "PERPLEXITY_API_KEY"
+      },
+      {
+        "service": "Google Gemini API",
+        "endpoint": "https://generativelanguage.googleapis.com/*",
+        "module": "brand-mentions",
+        "required": false,
+        "free_tier": true,
+        "env_var": "GEMINI_API_KEY"
       },
       {
         "service": "Tavily Search",
         "endpoint": "https://api.tavily.com/*",
-        "module": "brand-mentions",
+        "module": "brand-mentions (web grounding)",
         "required": false,
         "free_tier": true,
         "env_var": "TAVILY_API_KEY"
       },
       {
-        "service": "Schema.org Validator",
-        "endpoint": "https://validator.schema.org/*",
-        "module": "schema",
+        "service": "Serper",
+        "endpoint": "https://google.serper.dev/*",
+        "module": "brand-mentions (SERP)",
         "required": false,
         "free_tier": true,
-        "env_var": null
+        "env_var": "SERPER_API_KEY"
+      },
+      {
+        "service": "User-supplied SearXNG instance",
+        "endpoint": "(URL set by SEARXNG_BASE_URL)",
+        "module": "brand-mentions (SERP)",
+        "required": false,
+        "free_tier": true,
+        "env_var": "SEARXNG_BASE_URL"
+      },
+      {
+        "service": "Yandex.XML",
+        "endpoint": "https://yandex.com/search/xml/*",
+        "module": "brand-mentions (Russian market)",
+        "required": false,
+        "free_tier": true,
+        "env_var": "YANDEX_XML_USER + YANDEX_XML_KEY"
+      },
+      {
+        "service": "Originality.ai",
+        "endpoint": "https://api.originality.ai/*",
+        "module": "content (paid AI-detection)",
+        "required": false,
+        "free_tier": false,
+        "env_var": "ORIGINALITY_API_KEY"
+      },
+      {
+        "service": "GPTZero",
+        "endpoint": "https://api.gptzero.me/*",
+        "module": "content (paid AI-detection)",
+        "required": false,
+        "free_tier": true,
+        "env_var": "GPTZERO_API_KEY"
       }
     ],
     "fallback_on_missing_keys": "graceful_degradation_with_warning"
@@ -127,7 +168,7 @@
   },
   "audit_trail": {
     "manifest_first_published": "2026-04-28",
-    "manifest_last_updated": "2026-04-28",
+    "manifest_last_updated": "2026-05-05",
     "trust_md_human_readable": "TRUST.md",
     "release_audit_doc": "PUBLIC_RELEASE_AUDIT.md"
   }

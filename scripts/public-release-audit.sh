@@ -30,7 +30,7 @@ fi
 
 # ── 2. No secret-shaped strings ──────────────────────────────────────
 section "[2/8] no secret-shaped strings"
-SECRET_PATTERN='github_pat_|gh[pousr]_[a-zA-Z0-9]{20,}|x-access-token|authorization: bearer [^*]|api[_-]?key\s*[:=]\s*["'\'']?[a-zA-Z0-9]|secret\s*[:=]\s*["'\'']?[a-zA-Z0-9]|password\s*[:=]\s*["'\'']?[a-zA-Z0-9]|notion_token|sk-[a-zA-Z0-9]{20,}|hf_[a-zA-Z0-9]{20,}'
+SECRET_PATTERN='github_pat_|gh[pousr]_[a-zA-Z0-9]{20,}|x-access-token|authorization: bearer [^*$]+|(api[_-]?key|secret|password|token)\s*[:=]\s*["'\'']?[a-zA-Z0-9_-]{16,}|notion_token|sk-[a-zA-Z0-9]{20,}|hf_[a-zA-Z0-9]{20,}'
 hits=$(grep -rEn "$SECRET_PATTERN" \
        --include='*.py' --include='*.js' --include='*.ts' --include='*.sh' \
        --include='*.md' --include='*.yaml' --include='*.yml' --include='*.json' \

@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "geo-audit"
+version = "0.2.0"
+description = "Open-source GEO audit toolkit. Score URLs for AI search visibility."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+  { name = "Humanswith.ai", email = "security@humanswith.ai" },
+]
+keywords = ["geo", "seo", "ai-search", "llm", "audit", "chatgpt", "perplexity", "claude", "gemini"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Internet :: WWW/HTTP :: Site Management",
+]
+requires-python = ">=3.10"
+dependencies = [
+  "httpx>=0.27,<0.29",
+]
+
+[project.optional-dependencies]
+pdf = ["weasyprint>=60,<63", "markdown>=3.5,<4"]
+dev = ["pytest>=8,<9", "pytest-mock>=3.12,<4"]
+
+[project.urls]
+Homepage = "https://github.com/g-shevchenko/geo-audit"
+Documentation = "https://github.com/g-shevchenko/geo-audit#readme"
+Source = "https://github.com/g-shevchenko/geo-audit"
+Issues = "https://github.com/g-shevchenko/geo-audit/issues"
+Changelog = "https://github.com/g-shevchenko/geo-audit/blob/main/CHANGELOG.md"
+
+[project.scripts]
+geo-audit = "geo_audit.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["geo_audit*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

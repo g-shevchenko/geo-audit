@@ -1,0 +1,6 @@
+# geo-audit v0.2 — runtime dependencies (pinned).
+#
+# Core: httpx for HTTP, no parser dep (regex-based JSON-LD/HTML parsing).
+# All third-party LLM provider SDKs are OPTIONAL extras (see requirements-extras.txt).
+
+httpx>=0.27,<0.29
