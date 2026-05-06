@@ -1,0 +1,15 @@
+# Optional extras: install with `pip install -r requirements-extras.txt`
+# or `pip install 'geo-audit[pdf,llm,ai-detect]'` from pyproject.
+
+# PDF rendering
+weasyprint>=60,<63
+markdown>=3.5,<4
+
+# Optional LLM SDKs (modules will use HTTP directly if these aren't installed)
+# anthropic>=0.30,<1
+# openai>=1.30,<2
+
+# Optional AI-detection (Binoculars — heavy; not installed by default)
+# binoculars>=0.1
+# torch>=2.0
+# transformers>=4.40

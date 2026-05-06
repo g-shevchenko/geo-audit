@@ -8,7 +8,8 @@
 > 40+ client projects in production. **MIT-licensed**.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Status: v0.1](https://img.shields.io/badge/Status-v0.1%20skeleton-orange.svg)](CHANGELOG.md)
+[![Status: v0.2 working](https://img.shields.io/badge/Status-v0.2%20working-brightgreen.svg)](CHANGELOG.md)
+[![Tests: 95 passing](https://img.shields.io/badge/tests-95%20passing-brightgreen.svg)](tests/)
 [![OpenSSF Scorecard](https://img.shields.io/badge/OpenSSF-Scorecard%20pending-lightgrey.svg)](https://github.com/g-shevchenko/geo-audit/actions/workflows/scorecard.yml)
 
 ---
@@ -16,23 +17,45 @@
 ## What you get
 
 ```
-$ geo-audit https://yoursite.com --depth full --output report.pdf
+$ geo-audit audit https://yoursite.com -o report/
 
-→ report.pdf      client-ready PDF: composite GEO Score + per-module breakdown
-→ report.json     machine-readable, drop into CI / dashboards
-→ actions.md      prioritized P0–P3 action items with file/URL targets
+==> Composite GEO Score: 73/100
+    duration: 1.4s  |  modules used: 6/7
+    skipped: brand-mentions
+
+=== Per-module ===
+  citability               80/100
+  schema                   75/100
+  llmstxt                  80/100
+  crawlers                      —      (informational)
+  technical                65/100
+  content                  60/100
+  brand-mentions                —      (degraded — no LLM key)
+
+→ report/report.json   machine-readable, drop into CI / dashboards
+→ report/report.md     full per-module breakdown with findings + actions
+→ report/actions.md    prioritized P0–P3 action plan, client-shareable
+→ report/report.pdf    optional, requires `pip install 'geo-audit[pdf]'`
 ```
 
-Six independent modules. Run all, or pick what you need.
+**Bring your own keys (BYOK).** Every API key is OPTIONAL. Missing keys cause
+specific modules to degrade gracefully with a clear hint about what they
+would unlock — never a crash. Run `geo-audit doctor` to see your status.
 
-| Module           | Scores                                                                                            | Bundled? |
-|------------------|---------------------------------------------------------------------------------------------------|----------|
-| `citability`     | LLM-citation likelihood: TL;DR, FAQ, numbered structure, source links, clear definitions          | ✅       |
-| `schema`         | JSON-LD validator + suggester (Article, FAQPage, HowTo, Organization, Person, Product…)           | ✅       |
-| `llmstxt`        | Detects/generates `/llms.txt` and `/llms-full.txt` per [llmstxt.org](https://llmstxt.org)         | ✅       |
-| `brand-mentions` | Scans current ChatGPT, Perplexity, Claude, Gemini for live brand mentions (optional API keys)     | ✅       |
-| `technical`      | Core Web Vitals, SSR/SSG check, mobile-first, sitemap, robots, hreflang, AI-bot access            | ✅       |
-| `content`        | EEAT signals, AI-detection (open-source Binoculars), readability, uniqueness                      | ✅       |
+| Module           | Scores                                                                                            | Required keys |
+|------------------|---------------------------------------------------------------------------------------------------|---------------|
+| `citability`     | LLM-citation likelihood: TL;DR, FAQ, numbered structure, source links, clear definitions (EN+RU)  | none          |
+| `schema`         | JSON-LD validator + suggester (Article, FAQPage, HowTo, Organization, Person, Product…)           | none          |
+| `llmstxt`        | Detects `/llms.txt`, `/llms-full.txt`, AI-bot access in robots.txt (GPTBot, ClaudeBot, …)         | none          |
+| `crawlers`       | Full bot access map (AI / search / social) — informational                                        | none          |
+| `technical`      | Indexability (HTTPS, sitemap, robots, canonical, SSR/SSG, viewport) + Core Web Vitals             | optional `PAGESPEED_API_KEY` (free) for CWV |
+| `content`        | E-E-A-T signals + AI-detection (built-in heuristic) + readability (Flesch / Pushkin)              | none          |
+| `brand-mentions` | Live brand mention scan in Claude / ChatGPT / Perplexity / Gemini                                 | any of `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `PERPLEXITY_API_KEY`, `GEMINI_API_KEY`. Optional `TAVILY_API_KEY` grounds non-Perplexity scans with live web search. |
+
+**Cross-cutting upgrades** (improve every audit):
+
+- `FIRECRAWL_API_KEY` (free 500/mo) — auto-fallback fetcher for Cloudflare-protected, JS-heavy SPA, or geo-blocked sites that direct httpx can't reach.
+- `TAVILY_API_KEY` (free 1000/mo) — grounds Claude/ChatGPT/Gemini brand-mention queries with live web search.
 
 ---
 
@@ -70,12 +93,12 @@ less scripts/install.sh        # 50 lines, explicit
 less scripts/public-release-audit.sh  # 80 lines
 ```
 
-### 4. Verify the tag (releases ≥ v0.1.0)
+### 4. Verify the tag (releases ≥ v0.2.0)
 
 ```bash
-gh release download v0.1.0 -R g-shevchenko/geo-audit
-sha256sum -c geo-audit-v0.1.0.sha256
-gh attestation verify geo-audit-v0.1.0.tar.gz -R g-shevchenko/geo-audit
+gh release download v0.2.0 -R g-shevchenko/geo-audit
+sha256sum -c geo-audit-v0.2.0.sha256
+gh attestation verify geo-audit-v0.2.0.tar.gz -R g-shevchenko/geo-audit
 ```
 
 We never ask you to `curl … | bash`. If you see that pattern in third-party
@@ -95,18 +118,18 @@ What it does, in order:
 
 1. Re-runs `scripts/agent-preinstall-check.sh` and aborts on failure.
 2. Creates a local `.venv/` (Python virtualenv). **Never** touches global pip.
-3. Installs Node modules into local `node_modules/`. **Never** touches global npm.
+3. `pip install -e .` to make the `geo-audit` CLI available inside `.venv/bin/`.
 4. Creates `~/.cache/geo-audit/` for HTTP response caching (24h TTL).
-5. Writes a single executable to `.venv/bin/geo-audit`.
+5. Copies `.env.example` → `.env` if `.env` doesn't exist yet (all keys empty).
+6. Prints the next-step instructions, including `geo-audit doctor`.
 
 **No `sudo`. No PATH modification. No shell init file edits. No telemetry.**
 
 Requirements:
 
-- Python 3.10+ (for module dispatch, schema validators, content scoring)
-- Node 20+ (for Playwright, Lighthouse audits)
-- Chromium (auto-installed by Playwright)
+- Python 3.10+
 - Optional: `gh` CLI (for release verification only)
+- Optional: WeasyPrint (`pip install 'geo-audit[pdf]'`) — only if you want PDFs
 
 ### Add to PATH (manual, opt-in)
 
@@ -118,23 +141,90 @@ We refuse to do this for you. Your shell init is yours.
 
 ---
 
-## Quick audit
+## Quick audit — 4 steps
 
 ```bash
-geo-audit https://yoursite.com \
-  --depth full \
-  --output report.pdf \
-  --modules citability,schema,llmstxt,brand-mentions,technical,content
+# 1. Clone + install (creates .venv/ and .env)
+git clone https://github.com/g-shevchenko/geo-audit.git
+cd geo-audit
+bash scripts/install.sh
+
+# 2. See what keys you have / need
+.venv/bin/geo-audit doctor
+
+# 3. Register the keys you want, then paste them into .env
+$EDITOR .env
+
+# 4. Run an audit
+.venv/bin/geo-audit audit https://yoursite.com -o report/
 ```
 
-Without flags, the default profile is `--depth quick --modules citability,schema,technical`,
-which finishes in under 60 seconds and produces a ~5-page PDF.
+You'll get four files in `report/`:
 
-For CI use:
+- `report.json` — machine-readable, schema-stable. Pipe into anything.
+- `report.md` — full per-module breakdown.
+- `actions.md` — P0–P3 action plan, client-shareable.
+- `report.pdf` — optional, requires `pip install 'geo-audit[pdf]'` and `--pdf` flag.
+
+---
+
+## Register your API keys
+
+geo-audit is **bring-your-own-keys**. We never see them — they live in your
+local `.env` file and are sent only to the documented vendor endpoints in
+[`TRUST.md`](TRUST.md).
+
+**You can run an audit with zero keys** — 5 of 7 modules score from
+heuristics + structural checks alone. Adding keys unlocks specific
+modules. The table below tells you exactly what each one buys you.
+
+### Required for a full audit
+
+| Key | What you get | Where to register | Free tier? |
+|---|---|---|---|
+| `ANTHROPIC_API_KEY` **OR** `OPENAI_API_KEY` (one of) | Live brand-mention scan in Claude / ChatGPT (~$0.001/audit) | [console.anthropic.com](https://console.anthropic.com/settings/keys) / [platform.openai.com](https://platform.openai.com/api-keys) | $5 minimum credit / paid only |
+| `PAGESPEED_API_KEY` | Core Web Vitals (LCP / INP / CLS) — the `technical` module's second half | [Google PSI getting started](https://developers.google.com/speed/docs/insights/v5/get-started) | ✅ 25,000 req/day free |
+| `PERPLEXITY_API_KEY` | Live brand-mention scan in Perplexity (built-in web search — most accurate signal) | [perplexity.ai/settings/api](https://www.perplexity.ai/settings/api) | ✅ $5 free credits on signup |
+| `GEMINI_API_KEY` | Brand-mention scan in Gemini (proxy for Google AI Overviews readiness) | [ai.google.dev](https://ai.google.dev/gemini-api/docs/api-key) | ✅ generous free tier |
+
+### Cross-cutting upgrades (improve every audit)
+
+| Key | What you get | Where to register | Free tier? |
+|---|---|---|---|
+| `FIRECRAWL_API_KEY` | Auto-fallback fetcher for Cloudflare-protected, JS-heavy SPA, or geo-blocked sites that direct httpx can't reach (~30% of real-world targets) | [firecrawl.dev](https://www.firecrawl.dev/app/api-keys) | ✅ 500 req/month free |
+| `TAVILY_API_KEY` | Grounds Claude/ChatGPT/Gemini brand-mention queries with live web search (significantly improves accuracy) | [tavily.com](https://app.tavily.com/home) | ✅ 1,000 searches/month free |
+
+### Minimum cost path to a full audit
+
+Six free-tier signups + zero LLM cost gets you 4 of 6 weighted modules with
+real signal: PSI (free), Perplexity (free), Gemini (free), Firecrawl (free),
+Tavily (free), and the rest of the heuristic modules (no key). Add a $5
+Anthropic top-up if you want Claude in the brand-mention scan.
+
+After pasting keys into `.env`, re-run `geo-audit doctor` to confirm.
+
+### Pick specific modules
 
 ```bash
-geo-audit https://yoursite.com --output report.json --depth full --quiet
-# Exit code: 0 if GEO Score ≥ 70, 1 otherwise
+geo-audit audit https://yoursite.com --modules citability,schema,llmstxt -o out/
+```
+
+### Russian-language pages
+
+```bash
+geo-audit audit https://example.ru --lang ru -o out/
+```
+
+### Bypass cache (force refetch)
+
+```bash
+geo-audit audit https://yoursite.com --no-cache -o out/
+```
+
+### Force fetcher fallback for a known hostile target
+
+```bash
+FIRECRAWL_FORCE=1 geo-audit audit https://hostile-cf-site.com -o out/
 ```
 
 ---

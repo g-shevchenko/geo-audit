@@ -1,0 +1,59 @@
+"""Tests for the schema module."""
+from __future__ import annotations
+
+from pathlib import Path
+
+from geo_audit.modules import schema as schema_mod
+from geo_audit.modules.base import ModuleArgs
+
+
+def _args(html: str, url: str = "https://example.com") -> ModuleArgs:
+    return ModuleArgs(url=url, homepage_html=html, homepage_status=200)
+
+
+def test_extract_jsonld_blocks(good_html):
+    blocks = schema_mod.extract_jsonld_blocks(good_html)
+    assert len(blocks) == 4  # Article, Organization, FAQPage, BreadcrumbList
+
+
+def test_good_page_scores_high(good_html):
+    result = schema_mod.run(_args(good_html))
+    assert result.score >= 70, f"good_html should score ≥70, got {result.score}"
+    assert result.score <= 100
+    assert not result.ran_in_degraded_mode
+
+
+def test_bad_page_scores_low(bad_html):
+    result = schema_mod.run(_args(bad_html))
+    assert result.score <= 30, f"bad_html should score ≤30, got {result.score}"
+    # Should produce P0 action: no JSON-LD at all.
+    p0s = [a for a in result.actions if a.priority == "P0"]
+    assert any("JSON-LD" in a.title for a in p0s)
+
+
+def test_no_jsonld_actions(bad_html):
+    result = schema_mod.run(_args(bad_html))
+    titles = [a.title for a in result.actions]
+    assert any("Add JSON-LD" in t for t in titles)
+
+
+def test_parse_error_detected():
+    html = '<html><script type="application/ld+json">{"@type":"Article", malformed}</script></html>'
+    blocks = schema_mod.extract_jsonld_blocks(html)
+    assert len(blocks) == 1
+    assert blocks[0].get("_parse_error") is True
+
+
+def test_score_deterministic(good_html):
+    s1 = schema_mod.run(_args(good_html)).score
+    s2 = schema_mod.run(_args(good_html)).score
+    s3 = schema_mod.run(_args(good_html)).score
+    assert s1 == s2 == s3
+
+
+def test_handles_empty_html():
+    result = schema_mod.run(_args(""))
+    assert result.score == 0
+    assert result.ran_in_degraded_mode is False  # Returns 0, not skipped — but with actions.
+    titles = [a.title for a in result.actions]
+    assert any("Add JSON-LD" in t for t in titles)

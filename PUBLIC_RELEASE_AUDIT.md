@@ -82,11 +82,10 @@ test "$(cat VERSION)" = "$(grep '## \[' CHANGELOG.md | head -1 | grep -oE '[0-9]
 
 ### 8. No private contact info
 
-Personal emails (`tefggl@*`, `g.shevchenko@*`, etc.) and personal Telegram
-handles beyond the documented public ones are blocked. Only:
+Personal email addresses and personal Telegram handles are blocked.
+Only the documented public surfaces are allowed:
 - `security@humanswith.ai`
 - `conduct@humanswith.ai`
-- `https://t.me/gshevchenko_humanswith_ai` (public channel)
 - `https://humanswith.ai`
 
 ## Automation

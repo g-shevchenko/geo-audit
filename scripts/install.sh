@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# geo-audit installer — sets up local Python venv + Node modules.
-# Does NOT require sudo. Does NOT touch global pip/npm.
+# geo-audit installer — sets up a local Python venv with the geo-audit CLI.
+# Does NOT require sudo. Does NOT touch global pip. Does NOT modify shell init.
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-echo "==> geo-audit installer (v0.1)"
+echo "==> geo-audit installer"
 echo "    install dir: $ROOT"
 echo "    cache dir:   ~/.cache/geo-audit/"
 echo
 
-# 1. Verify trust profile first
+# 1. Verify trust profile first.
 if [[ -f scripts/agent-preinstall-check.sh ]]; then
   echo "==> Running preinstall check..."
   bash scripts/agent-preinstall-check.sh || {
@@ -22,35 +22,45 @@ if [[ -f scripts/agent-preinstall-check.sh ]]; then
   echo
 fi
 
-# 2. Python venv
-echo "==> Creating Python venv..."
+# 2. Python venv.
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "ERROR: python3 not found. Install Python 3.10 or newer first." >&2
+  exit 1
+fi
+
+echo "==> Creating Python venv (.venv/)"
 python3 -m venv .venv
 # shellcheck disable=SC1091
 source .venv/bin/activate
-pip install --quiet --upgrade pip
-pip install --quiet -r requirements.txt 2>/dev/null || echo "    (no requirements.txt yet — v0.1 in progress)"
+python3 -m pip install --quiet --upgrade pip
 
-# 3. Node modules
-echo "==> Installing Node modules (Playwright, Lighthouse)..."
-npm install --no-fund --no-audit --silent 2>/dev/null || echo "    (no package.json yet — v0.1 in progress)"
+# 3. Install geo-audit + runtime deps.
+echo "==> Installing geo-audit and dependencies"
+pip install --quiet -e .
 
-# 4. Cache dir
+# 4. Cache dir.
 mkdir -p "$HOME/.cache/geo-audit"
-
-# 5. Install CLI to .venv/bin/geo-audit
-mkdir -p .venv/bin
-cat > .venv/bin/geo-audit <<EOF
-#!/usr/bin/env bash
-exec "$ROOT/.venv/bin/python" -m geo_audit.cli "\$@"
-EOF
-chmod +x .venv/bin/geo-audit
 
 echo
 echo "==> Installation complete."
 echo
-echo "Next steps:"
-echo "  1. source .venv/bin/activate"
-echo "  2. geo-audit https://yoursite.com --depth full --output report.pdf"
+echo "==> Verifying:"
+"$ROOT/.venv/bin/geo-audit" --version
 echo
-echo "Or add to your PATH:"
+
+# 5. If no .env yet, copy from .env.example and run doctor.
+if [[ ! -f .env && -f .env.example ]]; then
+  cp .env.example .env
+  echo "==> Created .env from .env.example (all keys empty)."
+  echo
+fi
+
+echo "==> Next steps:"
+echo "  1. Edit .env and paste the API keys you have. All are OPTIONAL — missing keys"
+echo "     just degrade specific modules with a clear hint about what they would unlock."
+echo "  2. Run: .venv/bin/geo-audit doctor"
+echo "  3. Run: .venv/bin/geo-audit audit https://yoursite.com -o report/"
+echo
+echo "Optional: add to PATH"
 echo "  echo 'export PATH=\"$ROOT/.venv/bin:\$PATH\"' >> ~/.zshrc"
+echo
