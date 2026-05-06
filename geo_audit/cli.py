@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 from geo_audit import __version__, __methodology_version__
-from geo_audit.config import KEY_ENV_VARS, KEY_HINTS, MODULE_KEY_MATRIX, load_config
+from geo_audit.config import KEY_ENV_VARS, KEY_HINTS, MODULE_KEY_MATRIX, CROSS_CUTTING_KEYS, load_config
 from geo_audit.modules import registry
 from geo_audit.orchestrator import run_audit
 from geo_audit.report.json_writer import write_json
@@ -83,13 +83,19 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     print()
 
     if missing:
-        print("=== Quick wins ===")
+        print("=== Quick wins (BYOK) ===")
         if "ANTHROPIC_API_KEY" in missing and "OPENAI_API_KEY" in missing:
-            print(f"  • Add ONE of ANTHROPIC_API_KEY or OPENAI_API_KEY → unlocks LLM-graded scoring + brand-mention scan")
+            print(f"  • ANTHROPIC_API_KEY OR OPENAI_API_KEY        → live brand-mention scan in Claude / ChatGPT (~$0.001/audit)")
         if "PAGESPEED_API_KEY" in missing:
-            print(f"  • Add PAGESPEED_API_KEY (free) → unlocks Core Web Vitals (LCP/INP/CLS)")
+            print(f"  • PAGESPEED_API_KEY (free 25k/day)            → full Core Web Vitals (LCP/INP/CLS)")
         if "PERPLEXITY_API_KEY" in missing:
-            print(f"  • Add PERPLEXITY_API_KEY ($5 free credits) → unlocks Perplexity brand-mention")
+            print(f"  • PERPLEXITY_API_KEY ($5 free credits)        → live Perplexity brand-mention scan")
+        if "GEMINI_API_KEY" in missing:
+            print(f"  • GEMINI_API_KEY (free)                       → Gemini brand-mention scan")
+        if "FIRECRAWL_API_KEY" in missing:
+            print(f"  • FIRECRAWL_API_KEY (free 500/mo)             → audit Cloudflare / SPA / geo-blocked sites that direct httpx can't reach")
+        if "TAVILY_API_KEY" in missing:
+            print(f"  • TAVILY_API_KEY (free 1000/mo)               → ground Claude/ChatGPT/Gemini brand-scans with live web search (much higher accuracy)")
         print()
         print("Get started: copy .env.example → .env, paste your keys, then re-run `geo-audit doctor`.")
     else:

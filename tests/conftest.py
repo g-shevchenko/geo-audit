@@ -20,10 +20,8 @@ def _scrub_env(monkeypatch):
     """
     for k in [
         "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "PAGESPEED_API_KEY",
-        "PERPLEXITY_API_KEY", "GEMINI_API_KEY", "TAVILY_API_KEY",
-        "SERPER_API_KEY", "SEARXNG_BASE_URL",
-        "YANDEX_XML_USER", "YANDEX_XML_KEY",
-        "ORIGINALITY_API_KEY", "GPTZERO_API_KEY",
+        "PERPLEXITY_API_KEY", "GEMINI_API_KEY",
+        "FIRECRAWL_API_KEY", "TAVILY_API_KEY", "FIRECRAWL_FORCE",
         "GEO_AUDIT_CACHE_DIR",
     ]:
         monkeypatch.delenv(k, raising=False)

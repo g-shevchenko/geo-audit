@@ -29,6 +29,45 @@ DESCRIPTION = "Multi-platform brand mention scan (ChatGPT/Claude/Perplexity/Gemi
 PROVIDERS = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "PERPLEXITY_API_KEY", "GEMINI_API_KEY"]
 
 
+def _tavily_search(api_key: str, query: str, *, timeout_s: int = 20, max_results: int = 5) -> list[dict]:
+    """Call Tavily search API and return list of {title, url, content} dicts.
+
+    Used to ground Claude/ChatGPT/Gemini brand-mention queries with live web
+    search results (Perplexity has its own web search built-in, so we skip
+    grounding for it).
+    """
+    body = {
+        "api_key": api_key,
+        "query": query,
+        "max_results": max_results,
+        "search_depth": "basic",
+    }
+    try:
+        with httpx.Client(timeout=timeout_s) as client:
+            r = client.post("https://api.tavily.com/search", json=body)
+            r.raise_for_status()
+            data = r.json()
+    except (httpx.HTTPError, ValueError, KeyError):
+        return []
+    return [
+        {
+            "title": item.get("title", "")[:200],
+            "url": item.get("url", ""),
+            "content": item.get("content", "")[:500],
+        }
+        for item in data.get("results", [])[:max_results]
+    ]
+
+
+def _format_tavily_grounding(results: list[dict]) -> str:
+    if not results:
+        return ""
+    lines = ["Here is recent live web search context (Tavily, used to ground your answer):"]
+    for i, r in enumerate(results, 1):
+        lines.append(f"[{i}] {r.get('title', '')}\n  URL: {r.get('url', '')}\n  Excerpt: {r.get('content', '')[:300]}")
+    return "\n\n".join(lines)
+
+
 def _extract_brand_from_html(html: str, url: str) -> tuple[str, str]:
     """Extract brand name and root domain. Brand from <title>/og:site_name; domain from URL."""
     parsed = urllib.parse.urlparse(url)
@@ -142,9 +181,17 @@ def run(args: ModuleArgs) -> ModuleResult:
         lang = "ru" if len(re.findall(r"[А-Яа-яЁё]", html)) > len(re.findall(r"[A-Za-z]", html)) * 0.5 else "en"
     query = _build_query(brand, domain, lang)
 
-    sys_prompt = ("You are an expert research assistant. Answer the user's question concisely. "
-                  "If you don't know the company, say so explicitly. Always include 1-3 source URLs "
-                  "if you can. Keep responses under 200 words.")
+    base_sys_prompt = ("You are an expert research assistant. Answer the user's question concisely. "
+                       "If you don't know the company, say so explicitly. Always include 1-3 source URLs "
+                       "if you can. Keep responses under 200 words.")
+
+    # Optional Tavily grounding for non-Perplexity providers.
+    tavily_key = keys.get("TAVILY_API_KEY")
+    tavily_grounding = ""
+    tavily_results: list[dict] = []
+    if tavily_key:
+        tavily_results = _tavily_search(tavily_key, f"{brand} {domain}", timeout_s=args.timeout_s)
+        tavily_grounding = _format_tavily_grounding(tavily_results)
 
     per_provider: dict[str, dict] = {}
     findings: list[Finding] = []
@@ -153,6 +200,11 @@ def run(args: ModuleArgs) -> ModuleResult:
 
     for label, env_key in active_providers:
         api_key = keys[env_key]
+        # Perplexity has built-in web search — skip Tavily grounding for it.
+        if env_key == "PERPLEXITY_API_KEY" or not tavily_grounding:
+            sys_prompt = base_sys_prompt
+        else:
+            sys_prompt = base_sys_prompt + "\n\n" + tavily_grounding
         try:
             if env_key == "ANTHROPIC_API_KEY":
                 resp = llm.call_anthropic(api_key, system=sys_prompt, user=query, max_tokens=400, timeout_s=args.timeout_s + 30)
@@ -223,5 +275,7 @@ def run(args: ModuleArgs) -> ModuleResult:
             "providers_failed": [p for p, v in per_provider.items() if v.get("score") is None],
             "per_provider": per_provider,
             "estimated_cost_usd": total_cost,
+            "tavily_grounding_used": bool(tavily_grounding),
+            "tavily_results_count": len(tavily_results),
         },
     )

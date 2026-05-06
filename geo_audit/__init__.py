@@ -8,7 +8,7 @@ License: MIT
 Repository: https://github.com/g-shevchenko/geo-audit
 """
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 __methodology_version__ = "1"
 
 from geo_audit.modules.base import ModuleArgs, ModuleResult, Finding

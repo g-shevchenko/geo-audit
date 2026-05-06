@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import time
 import urllib.parse
@@ -17,6 +18,8 @@ from typing import Optional
 from xml.etree import ElementTree as ET
 
 import httpx
+
+from geo_audit import fetcher as _fetcher
 
 
 CACHE_TTL_SEC = 24 * 3600  # 24h
@@ -59,6 +62,29 @@ def _write_cache(cache_dir: Path, url: str, payload: dict, suffix: str = "json")
     p.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 
 
+def _direct_httpx_fetch(url: str, *, user_agent: str, timeout_s: int) -> tuple[FetchResult, Optional[Exception]]:
+    """One direct httpx GET. Returns (result, error_or_none)."""
+    headers = {"User-Agent": user_agent, "Accept": "text/html,application/xhtml+xml,*/*;q=0.8"}
+    t0 = time.time()
+    try:
+        with httpx.Client(follow_redirects=True, timeout=timeout_s, headers=headers) as client:
+            r = client.get(url)
+            return FetchResult(
+                url=url,
+                final_url=str(r.url),
+                status=r.status_code,
+                headers={k.lower(): v for k, v in r.headers.items()},
+                text=r.text or "",
+                duration_ms=int((time.time() - t0) * 1000),
+            ), None
+    except httpx.HTTPError as e:
+        return FetchResult(
+            url=url, final_url=url, status=0,
+            headers={"x-fetch-error": str(e)[:200]},
+            text="", duration_ms=int((time.time() - t0) * 1000),
+        ), e
+
+
 def fetch(
     url: str,
     *,
@@ -66,8 +92,21 @@ def fetch(
     timeout_s: int = 30,
     cache_dir: Optional[Path] = None,
     no_cache: bool = False,
+    firecrawl_api_key: Optional[str] = None,
+    enable_fallback: bool = True,
 ) -> FetchResult:
-    """Fetch one URL with caching."""
+    """Fetch one URL with caching and optional Firecrawl fallback.
+
+    Resolution order:
+      1. Cache (24h TTL) — unless no_cache.
+      2. Direct httpx GET.
+      3. If firecrawl_api_key is set AND (FIRECRAWL_FORCE=1 OR direct fetch
+         looked unusable), retry via Firecrawl.
+
+    For non-HTML resources (robots.txt, sitemap.xml, llms.txt) the fallback
+    layer is automatically skipped because Firecrawl is HTML-rendering and
+    fallback only triggers for HTML-shaped failures.
+    """
     if cache_dir and not no_cache:
         cached = _read_cache(cache_dir, url)
         if cached is not None:
@@ -81,27 +120,31 @@ def fetch(
                 from_cache=True,
             )
 
-    headers = {"User-Agent": user_agent, "Accept": "text/html,application/xhtml+xml,*/*;q=0.8"}
-    t0 = time.time()
-    try:
-        with httpx.Client(follow_redirects=True, timeout=timeout_s, headers=headers) as client:
-            r = client.get(url)
-            duration_ms = int((time.time() - t0) * 1000)
-            result = FetchResult(
-                url=url,
-                final_url=str(r.url),
-                status=r.status_code,
-                headers={k.lower(): v for k, v in r.headers.items()},
-                text=r.text or "",
-                duration_ms=duration_ms,
+    # Decide whether to skip direct httpx and go straight to Firecrawl.
+    looks_like_html_target = not any(url.endswith(s) for s in (".txt", ".xml"))
+    force_firecrawl = (
+        firecrawl_api_key
+        and looks_like_html_target
+        and _fetcher.firecrawl_force_enabled()
+    )
+
+    if force_firecrawl:
+        result = _fetch_via_firecrawl_wrap(url, firecrawl_api_key, user_agent=user_agent, timeout_s=timeout_s)
+    else:
+        result, _err = _direct_httpx_fetch(url, user_agent=user_agent, timeout_s=timeout_s)
+
+        # Decide if we should retry via Firecrawl.
+        if (
+            enable_fallback
+            and firecrawl_api_key
+            and looks_like_html_target
+            and _fetcher.should_try_fallback(result.status, result.text)
+        ):
+            fallback_result = _fetch_via_firecrawl_wrap(
+                url, firecrawl_api_key, user_agent=user_agent, timeout_s=timeout_s
             )
-    except httpx.HTTPError as e:
-        duration_ms = int((time.time() - t0) * 1000)
-        result = FetchResult(
-            url=url, final_url=url, status=0,
-            headers={"x-fetch-error": str(e)[:200]},
-            text="", duration_ms=duration_ms,
-        )
+            if fallback_result.status == 200 and fallback_result.text.strip():
+                result = fallback_result
 
     if cache_dir and not no_cache and result.status > 0:
         _write_cache(cache_dir, url, {
@@ -112,6 +155,26 @@ def fetch(
             "duration_ms": result.duration_ms,
         })
     return result
+
+
+def _fetch_via_firecrawl_wrap(url: str, api_key: str, *, user_agent: str, timeout_s: int) -> FetchResult:
+    """Wrap fetcher.fetch_via_firecrawl into a FetchResult."""
+    t0 = time.time()
+    try:
+        status, hdrs, html = _fetcher.fetch_via_firecrawl(
+            url, api_key, timeout_s=timeout_s + 30, user_agent=user_agent,
+        )
+        return FetchResult(
+            url=url, final_url=url, status=status,
+            headers=hdrs, text=html,
+            duration_ms=int((time.time() - t0) * 1000),
+        )
+    except (httpx.HTTPError, ValueError, KeyError) as e:
+        return FetchResult(
+            url=url, final_url=url, status=0,
+            headers={"x-fetch-error": f"firecrawl: {str(e)[:200]}"},
+            text="", duration_ms=int((time.time() - t0) * 1000),
+        )
 
 
 def fetch_robots(

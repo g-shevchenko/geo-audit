@@ -7,6 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.1] — 2026-05-06
+
+Closes the gap raised by the v0.2.0 review: the `.env.example` listed several
+keys that no module actually consumed. This release wires the two
+highest-impact ones and removes the rest until they have a real consumer.
+
+### Added
+
+- **`FIRECRAWL_API_KEY` — auto-fallback page fetcher.** Direct httpx still
+  runs first (zero-cost, zero-key path stays the default). When direct
+  httpx returns a Cloudflare/DataDome challenge, an empty SPA shell, or
+  any 4xx/5xx, geo-audit retries the page through Firecrawl. Without it,
+  ~30% of real-world targets — Cloudflare-protected SaaS, JS-heavy SPAs,
+  geo-blocked sites — return empty HTML and silently score zero across
+  several modules. Free tier: 500 requests/month.
+  - New env var `FIRECRAWL_FORCE=1` skips the wasted httpx attempt and
+    routes every fetch through Firecrawl. Useful for known hostile
+    targets.
+  - The fallback is non-HTML-aware: `robots.txt`, `sitemap.xml`,
+    `llms.txt` etc. never use Firecrawl (cheaper + correct).
+  - `report.json` now records `config.homepage_via` = `httpx` or
+    `firecrawl` so users can see which path delivered the HTML.
+- **`TAVILY_API_KEY` — brand-mention grounding for non-Perplexity
+  providers.** When set, geo-audit pre-fetches the top 5 Tavily results
+  for `<brand> <domain>` and injects them into the Claude / ChatGPT /
+  Gemini system prompts. Significantly improves accuracy for these
+  providers, which lack built-in web search. Skipped for Perplexity
+  (which already has its own search). Free tier: 1,000 searches/month.
+  - `report.json.modules[brand-mentions].sub_scores.tavily_grounding_used`
+    records whether grounding was active.
+- 18 new tests (`tests/test_fetcher.py`, `tests/test_brand_mentions_tavily.py`)
+  covering challenge-detection heuristic, fallback decision, force-on env,
+  Tavily grounding wiring, and no-grounding-for-Perplexity invariant.
+  Total test count: 95.
+
+### Changed
+
+- **Removed unwired env vars** from `.env.example`, `config.KEY_HINTS`,
+  and `trust/manifest.json`:
+  - `ORIGINALITY_API_KEY`, `GPTZERO_API_KEY` — content module currently
+    uses built-in lexical heuristic only; paid alternatives will be wired
+    in v0.3.
+  - `SERPER_API_KEY`, `SEARXNG_BASE_URL` — alternative SERP backends;
+    Tavily covers the immediate need.
+  - `YANDEX_XML_USER`, `YANDEX_XML_KEY` — Russian-market AI search
+    visibility; arrives in v0.3 alongside a dedicated module.
+  - `.env.example` now has a short "Roadmap (declared but not yet wired)"
+    note so anyone who knows about these keys understands their status.
+- `geo-audit doctor` updated to surface the new BYOK quick-wins for
+  Firecrawl and Tavily with free-tier hints.
+- `scripts/public-release-audit.sh` regex tightened (false-positive on
+  Python `api_key: str` type annotations now skipped — real secret
+  patterns still caught at ≥16 alphanum chars after `=`/`:`).
+
+### Notes
+
+- Methodology version unchanged at `1`.
+- `trust/manifest.json` updated to v0.2.1; `external_apis_optional` now
+  contains exactly the endpoints geo-audit actually calls.
+
+---
+
 ## [0.2.0] — 2026-05-05
 
 First working release. Implements the full v0.1 methodology spec with seven
@@ -106,6 +168,7 @@ Initial public release. Skeleton + documentation + trust scaffolding.
   - Dependabot configuration
   - GitHub Actions workflows: trust check on PRs, OpenSSF Scorecard
 
-[Unreleased]: https://github.com/g-shevchenko/geo-audit/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/g-shevchenko/geo-audit/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/g-shevchenko/geo-audit/releases/tag/v0.2.1
 [0.2.0]: https://github.com/g-shevchenko/geo-audit/releases/tag/v0.2.0
 [0.1.0]: https://github.com/g-shevchenko/geo-audit/releases/tag/v0.1.0

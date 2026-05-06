@@ -4,7 +4,7 @@
   "tool": {
     "name": "geo-audit",
     "repository": "https://github.com/g-shevchenko/geo-audit",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "license": "MIT",
     "author": "Humanswith.ai (FZCO)",
     "contact": "security@humanswith.ai"
@@ -74,50 +74,18 @@
       {
         "service": "Tavily Search",
         "endpoint": "https://api.tavily.com/*",
-        "module": "brand-mentions (web grounding)",
+        "module": "brand-mentions (live web search grounding for non-Perplexity providers)",
         "required": false,
         "free_tier": true,
         "env_var": "TAVILY_API_KEY"
       },
       {
-        "service": "Serper",
-        "endpoint": "https://google.serper.dev/*",
-        "module": "brand-mentions (SERP)",
+        "service": "Firecrawl",
+        "endpoint": "https://api.firecrawl.dev/*",
+        "module": "fetcher (auto-fallback for Cloudflare / SPA / geo-blocked targets)",
         "required": false,
         "free_tier": true,
-        "env_var": "SERPER_API_KEY"
-      },
-      {
-        "service": "User-supplied SearXNG instance",
-        "endpoint": "(URL set by SEARXNG_BASE_URL)",
-        "module": "brand-mentions (SERP)",
-        "required": false,
-        "free_tier": true,
-        "env_var": "SEARXNG_BASE_URL"
-      },
-      {
-        "service": "Yandex.XML",
-        "endpoint": "https://yandex.com/search/xml/*",
-        "module": "brand-mentions (Russian market)",
-        "required": false,
-        "free_tier": true,
-        "env_var": "YANDEX_XML_USER + YANDEX_XML_KEY"
-      },
-      {
-        "service": "Originality.ai",
-        "endpoint": "https://api.originality.ai/*",
-        "module": "content (paid AI-detection)",
-        "required": false,
-        "free_tier": false,
-        "env_var": "ORIGINALITY_API_KEY"
-      },
-      {
-        "service": "GPTZero",
-        "endpoint": "https://api.gptzero.me/*",
-        "module": "content (paid AI-detection)",
-        "required": false,
-        "free_tier": true,
-        "env_var": "GPTZERO_API_KEY"
+        "env_var": "FIRECRAWL_API_KEY"
       }
     ],
     "fallback_on_missing_keys": "graceful_degradation_with_warning"
@@ -168,7 +136,7 @@
   },
   "audit_trail": {
     "manifest_first_published": "2026-04-28",
-    "manifest_last_updated": "2026-05-05",
+    "manifest_last_updated": "2026-05-06",
     "trust_md_human_readable": "TRUST.md",
     "release_audit_doc": "PUBLIC_RELEASE_AUDIT.md"
   }

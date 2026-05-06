@@ -64,9 +64,12 @@ def run_audit(
 
     cfg.cache_dir.mkdir(parents=True, exist_ok=True)
 
+    firecrawl_key = cfg.api_keys.get("FIRECRAWL_API_KEY")
+
     # 1. Crawl shared artifacts.
     homepage = fetch(url, user_agent=cfg.user_agent, timeout_s=cfg.timeout_s,
-                     cache_dir=cfg.cache_dir, no_cache=no_cache)
+                     cache_dir=cfg.cache_dir, no_cache=no_cache,
+                     firecrawl_api_key=firecrawl_key)
     robots_txt = fetch_robots(homepage.final_url, user_agent=cfg.user_agent,
                               timeout_s=10, cache_dir=cfg.cache_dir, no_cache=no_cache)
     sitemap_urls = fetch_sitemap_urls(homepage.final_url, user_agent=cfg.user_agent,
@@ -123,6 +126,7 @@ def run_audit(
         "homepage_status": homepage.status,
         "homepage_final_url": homepage.final_url,
         "homepage_from_cache": homepage.from_cache,
+        "homepage_via": homepage.headers.get("x-fetched-via", "httpx"),
         "sitemap_url_count": len(sitemap_urls),
         "robots_present": bool(robots_txt),
     }

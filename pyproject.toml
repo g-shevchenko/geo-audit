@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "geo-audit"
-version = "0.2.0"
+version = "0.2.1"
 description = "Open-source GEO audit toolkit. Score URLs for AI search visibility."
 readme = "README.md"
 license = { text = "MIT" }

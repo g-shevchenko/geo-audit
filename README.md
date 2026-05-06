@@ -9,7 +9,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Status: v0.2 working](https://img.shields.io/badge/Status-v0.2%20working-brightgreen.svg)](CHANGELOG.md)
-[![Tests: 77 passing](https://img.shields.io/badge/tests-77%20passing-brightgreen.svg)](tests/)
+[![Tests: 95 passing](https://img.shields.io/badge/tests-95%20passing-brightgreen.svg)](tests/)
 [![OpenSSF Scorecard](https://img.shields.io/badge/OpenSSF-Scorecard%20pending-lightgrey.svg)](https://github.com/g-shevchenko/geo-audit/actions/workflows/scorecard.yml)
 
 ---
@@ -50,7 +50,12 @@ would unlock — never a crash. Run `geo-audit doctor` to see your status.
 | `crawlers`       | Full bot access map (AI / search / social) — informational                                        | none          |
 | `technical`      | Indexability (HTTPS, sitemap, robots, canonical, SSR/SSG, viewport) + Core Web Vitals             | optional `PAGESPEED_API_KEY` (free) for CWV |
 | `content`        | E-E-A-T signals + AI-detection (built-in heuristic) + readability (Flesch / Pushkin)              | none          |
-| `brand-mentions` | Live brand mention scan in Claude / ChatGPT / Perplexity / Gemini                                 | any of `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `PERPLEXITY_API_KEY`, `GEMINI_API_KEY` |
+| `brand-mentions` | Live brand mention scan in Claude / ChatGPT / Perplexity / Gemini                                 | any of `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `PERPLEXITY_API_KEY`, `GEMINI_API_KEY`. Optional `TAVILY_API_KEY` grounds non-Perplexity scans with live web search. |
+
+**Cross-cutting upgrades** (improve every audit):
+
+- `FIRECRAWL_API_KEY` (free 500/mo) — auto-fallback fetcher for Cloudflare-protected, JS-heavy SPA, or geo-blocked sites that direct httpx can't reach.
+- `TAVILY_API_KEY` (free 1000/mo) — grounds Claude/ChatGPT/Gemini brand-mention queries with live web search.
 
 ---
 

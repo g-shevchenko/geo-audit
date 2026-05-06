@@ -18,13 +18,8 @@ KEY_ENV_VARS = [
     "PAGESPEED_API_KEY",
     "PERPLEXITY_API_KEY",
     "GEMINI_API_KEY",
+    "FIRECRAWL_API_KEY",
     "TAVILY_API_KEY",
-    "SERPER_API_KEY",
-    "SEARXNG_BASE_URL",
-    "YANDEX_XML_USER",
-    "YANDEX_XML_KEY",
-    "ORIGINALITY_API_KEY",
-    "GPTZERO_API_KEY",
 ]
 
 
@@ -45,20 +40,15 @@ KEY_HINTS = {
         "register": "https://developers.google.com/speed/docs/insights/v5/get-started",
         "free_tier": "yes — 25k requests/day free",
     },
+    "FIRECRAWL_API_KEY": {
+        "what": "Auto-fallback fetcher for Cloudflare-protected / JS-heavy / geo-blocked sites — without it, ~30% of targets return empty HTML",
+        "register": "https://www.firecrawl.dev/app/api-keys",
+        "free_tier": "yes — 500 requests/month free",
+    },
     "TAVILY_API_KEY": {
-        "what": "LLM-friendly web search for brand-mention grounding",
-        "register": "https://tavily.com",
+        "what": "Grounds Claude / ChatGPT / Gemini brand-mention queries with live web search results — significantly improves brand-mentions accuracy for non-Perplexity providers",
+        "register": "https://app.tavily.com/home",
         "free_tier": "yes — 1,000 searches/month free",
-    },
-    "SERPER_API_KEY": {
-        "what": "Google SERP fetcher (alternative to SearXNG)",
-        "register": "https://serper.dev",
-        "free_tier": "yes — 2,500 queries free, then paid",
-    },
-    "SEARXNG_BASE_URL": {
-        "what": "Self-hosted SearXNG endpoint for SERP queries (no auth)",
-        "register": "https://docs.searxng.org/admin/installation.html",
-        "free_tier": "self-hosted",
     },
     "PERPLEXITY_API_KEY": {
         "what": "Live brand-mention scan in Perplexity AI search results",
@@ -70,40 +60,26 @@ KEY_HINTS = {
         "register": "https://ai.google.dev/gemini-api/docs/api-key",
         "free_tier": "yes — generous free tier",
     },
-    "YANDEX_XML_USER": {
-        "what": "Russian-market AI search visibility (Yandex Neuro proxy via Yandex.XML)",
-        "register": "https://xml.yandex.ru/",
-        "free_tier": "yes — limited daily quota",
-        "pair_with": "YANDEX_XML_KEY",
-    },
-    "YANDEX_XML_KEY": {
-        "what": "(paired with YANDEX_XML_USER) Russian-market AI search visibility",
-        "register": "https://xml.yandex.ru/",
-        "free_tier": "yes — limited daily quota",
-        "pair_with": "YANDEX_XML_USER",
-    },
-    "ORIGINALITY_API_KEY": {
-        "what": "Paid AI-content detection (alternative to local heuristic / Binoculars)",
-        "register": "https://originality.ai/",
-        "free_tier": "no — pay-per-scan",
-    },
-    "GPTZERO_API_KEY": {
-        "what": "Paid AI-content detection (alternative to local heuristic / Binoculars)",
-        "register": "https://gptzero.me/",
-        "free_tier": "yes — limited monthly quota",
-    },
 }
 
 
 # Module → required keys map. Every key here is OPTIONAL: missing → graceful degrade.
 MODULE_KEY_MATRIX: dict[str, dict[str, list[str]]] = {
-    "citability":    {"required": [],                                            "optional_any_of": ["ANTHROPIC_API_KEY", "OPENAI_API_KEY"]},
-    "schema":        {"required": [],                                            "optional_any_of": []},
-    "llmstxt":       {"required": [],                                            "optional_any_of": []},
-    "crawlers":      {"required": [],                                            "optional_any_of": []},
-    "technical":     {"required": [],                                            "optional_any_of": ["PAGESPEED_API_KEY"]},
-    "content":       {"required": [],                                            "optional_any_of": ["ANTHROPIC_API_KEY", "OPENAI_API_KEY"]},
-    "brand-mentions":{"required": [],                                            "optional_any_of": ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "PERPLEXITY_API_KEY", "GEMINI_API_KEY", "YANDEX_XML_USER"]},
+    "citability":    {"required": [], "optional_any_of": []},
+    "schema":        {"required": [], "optional_any_of": []},
+    "llmstxt":       {"required": [], "optional_any_of": []},
+    "crawlers":      {"required": [], "optional_any_of": []},
+    "technical":     {"required": [], "optional_any_of": ["PAGESPEED_API_KEY"]},
+    "content":       {"required": [], "optional_any_of": []},
+    "brand-mentions":{"required": [], "optional_any_of": ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "PERPLEXITY_API_KEY", "GEMINI_API_KEY"]},
+}
+
+
+# Cross-cutting helpers that improve any module by being available.
+# Listed separately so `doctor` can suggest them as universal upgrades.
+CROSS_CUTTING_KEYS = {
+    "FIRECRAWL_API_KEY": "Better fetcher (Cloudflare / SPA / geo-blocked sites)",
+    "TAVILY_API_KEY":    "Better brand-mention grounding (improves Claude/ChatGPT/Gemini accuracy)",
 }
 
 
