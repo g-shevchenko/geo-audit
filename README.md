@@ -141,18 +141,21 @@ We refuse to do this for you. Your shell init is yours.
 
 ---
 
-## Quick audit
-
-After `bash scripts/install.sh`:
+## Quick audit — 4 steps
 
 ```bash
-# 1. See your key status & which modules will run.
+# 1. Clone + install (creates .venv/ and .env)
+git clone https://github.com/g-shevchenko/geo-audit.git
+cd geo-audit
+bash scripts/install.sh
+
+# 2. See what keys you have / need
 .venv/bin/geo-audit doctor
 
-# 2. Edit .env, paste any keys you have. All optional.
+# 3. Register the keys you want, then paste them into .env
 $EDITOR .env
 
-# 3. Run an audit.
+# 4. Run an audit
 .venv/bin/geo-audit audit https://yoursite.com -o report/
 ```
 
@@ -162,6 +165,43 @@ You'll get four files in `report/`:
 - `report.md` — full per-module breakdown.
 - `actions.md` — P0–P3 action plan, client-shareable.
 - `report.pdf` — optional, requires `pip install 'geo-audit[pdf]'` and `--pdf` flag.
+
+---
+
+## Register your API keys
+
+geo-audit is **bring-your-own-keys**. We never see them — they live in your
+local `.env` file and are sent only to the documented vendor endpoints in
+[`TRUST.md`](TRUST.md).
+
+**You can run an audit with zero keys** — 5 of 7 modules score from
+heuristics + structural checks alone. Adding keys unlocks specific
+modules. The table below tells you exactly what each one buys you.
+
+### Required for a full audit
+
+| Key | What you get | Where to register | Free tier? |
+|---|---|---|---|
+| `ANTHROPIC_API_KEY` **OR** `OPENAI_API_KEY` (one of) | Live brand-mention scan in Claude / ChatGPT (~$0.001/audit) | [console.anthropic.com](https://console.anthropic.com/settings/keys) / [platform.openai.com](https://platform.openai.com/api-keys) | $5 minimum credit / paid only |
+| `PAGESPEED_API_KEY` | Core Web Vitals (LCP / INP / CLS) — the `technical` module's second half | [Google PSI getting started](https://developers.google.com/speed/docs/insights/v5/get-started) | ✅ 25,000 req/day free |
+| `PERPLEXITY_API_KEY` | Live brand-mention scan in Perplexity (built-in web search — most accurate signal) | [perplexity.ai/settings/api](https://www.perplexity.ai/settings/api) | ✅ $5 free credits on signup |
+| `GEMINI_API_KEY` | Brand-mention scan in Gemini (proxy for Google AI Overviews readiness) | [ai.google.dev](https://ai.google.dev/gemini-api/docs/api-key) | ✅ generous free tier |
+
+### Cross-cutting upgrades (improve every audit)
+
+| Key | What you get | Where to register | Free tier? |
+|---|---|---|---|
+| `FIRECRAWL_API_KEY` | Auto-fallback fetcher for Cloudflare-protected, JS-heavy SPA, or geo-blocked sites that direct httpx can't reach (~30% of real-world targets) | [firecrawl.dev](https://www.firecrawl.dev/app/api-keys) | ✅ 500 req/month free |
+| `TAVILY_API_KEY` | Grounds Claude/ChatGPT/Gemini brand-mention queries with live web search (significantly improves accuracy) | [tavily.com](https://app.tavily.com/home) | ✅ 1,000 searches/month free |
+
+### Minimum cost path to a full audit
+
+Six free-tier signups + zero LLM cost gets you 4 of 6 weighted modules with
+real signal: PSI (free), Perplexity (free), Gemini (free), Firecrawl (free),
+Tavily (free), and the rest of the heuristic modules (no key). Add a $5
+Anthropic top-up if you want Claude in the brand-mention scan.
+
+After pasting keys into `.env`, re-run `geo-audit doctor` to confirm.
 
 ### Pick specific modules
 
@@ -179,6 +219,12 @@ geo-audit audit https://example.ru --lang ru -o out/
 
 ```bash
 geo-audit audit https://yoursite.com --no-cache -o out/
+```
+
+### Force fetcher fallback for a known hostile target
+
+```bash
+FIRECRAWL_FORCE=1 geo-audit audit https://hostile-cf-site.com -o out/
 ```
 
 ---
