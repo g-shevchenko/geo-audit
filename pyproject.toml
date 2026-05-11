@@ -28,7 +28,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-pdf = ["weasyprint>=60,<63", "markdown>=3.5,<4"]
+pdf = ["weasyprint>=60,<69", "markdown>=3.5,<4"]
 dev = ["pytest>=8,<9", "pytest-mock>=3.12,<4"]
 
 [project.urls]
