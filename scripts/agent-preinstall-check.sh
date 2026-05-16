@@ -38,12 +38,26 @@ fi
 
 # 3. No internal HWAI infra references
 echo "  [3/5] no internal infra leaks..."
-banned='hwai-ops\.xyz|humanswith-ai/(?!geo-audit|contentos-benchmark)|159\.195\.|193\.188\.|185\.217\.|tefggl@'
-if grep -rEi "$banned" \
-     --include="*.py" --include="*.js" --include="*.ts" --include="*.sh" \
-     --include="*.md" --include="*.yaml" 2>/dev/null \
-     | grep -v "agent-preinstall-check.sh"; then
+# NOTE: portable POSIX ERE only — no PCRE lookahead (grep -E has no (?!...);
+# it parsed differently on GNU vs BSD/ugrep and false-failed in CI). The
+# pattern-definition / trust files legitimately contain these tokens as
+# DATA, so they are excluded — same allow-list as public-release-audit.sh.
+banned='hwai-ops\.xyz|159\.195\.|193\.188\.|185\.217\.|tefggl@'
+exclude='agent-preinstall-check\.sh|public-release-audit\.sh|PUBLIC_RELEASE_AUDIT|TRUST\.md|trust/manifest'
+hits=$(grep -rEi "$banned" \
+       --include="*.py" --include="*.js" --include="*.ts" --include="*.sh" \
+       --include="*.md" --include="*.yaml" . 2>/dev/null \
+       | grep -vE "$exclude" || true)
+# Any humanswith-ai/<repo> reference except the two allowed public repos
+# (portable two-step instead of a negative lookahead).
+org_hits=$(grep -rEi 'humanswith-ai/[a-z0-9._-]+' \
+       --include="*.py" --include="*.js" --include="*.ts" --include="*.sh" \
+       --include="*.md" --include="*.yaml" . 2>/dev/null \
+       | grep -vE "$exclude" \
+       | grep -viE 'humanswith-ai/(geo-audit|contentos-benchmark)([^a-z0-9._-]|$)' || true)
+if [[ -n "$hits$org_hits" ]]; then
   echo "    FAIL: internal HWAI reference detected"
+  printf '%s\n' "$hits$org_hits" | head -3
   errors=$((errors + 1))
 else
   echo "    ok"
