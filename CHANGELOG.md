@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.2] — 2026-05-16
+
+Corrects the `llmstxt` module's honesty framing and spec-accuracy. No
+scoring weights changed; methodology version stays `1`.
+
+### Changed
+
+- **`llmstxt` severity is now honest.** A missing `/llms.txt` was
+  previously a **P0/P1** action ("Publish /llms.txt per llmstxt.org
+  spec"). No major AI engine officially consumes a third-party
+  `llms.txt` for answer generation and Google has publicly stated it
+  does not use it, so absence is no longer treated as a critical
+  visibility problem — it is a **P2** controlled-narrative / citability
+  asset. Every report now also carries an explicit informational note
+  that llms.txt is not a ranking signal.
+- **Spec-accurate validity.** `_is_valid_llms_txt` now follows the
+  llmstxt.org spec where the **H1 is the only required element**.
+  Earlier it incorrectly also required an `##` section or a link line,
+  marking spec-valid H1-only files invalid (and zeroing their 50-pt
+  subscore). Missing summary/sections are quality findings, not
+  validity failures.
+- **`/llms-full.txt` correctly labelled.** It is a **community
+  convention** (popularised by Mintlify), not part of the spec; the
+  spec's own expansion artifacts are `llms-ctx.txt` /
+  `llms-ctx-full.txt`. Its absence is now a **P3** optional suggestion,
+  not a P2 "Add" action.
+
+### Added
+
+- **Markdown page-mirror probe (spec proposal 2).** The llms.txt spec
+  is two proposals; the second — a clean Markdown copy of each page at
+  `<url>.md` (or `index.html.md`) — was previously ignored. The module
+  now probes `/index.html.md` and reports presence/absence as an
+  **informational** finding (no scoring weight).
+- `docs/llmstxt-conformance.md` — a standalone conformance + honesty
+  reference for the `llmstxt` module.
+- 3 new tests (spec-minimal validity, no-H1 invalidity, missing
+  `/llms.txt` is not P0/P1). Total test count: 98.
+
+### Notes
+
+- Methodology version unchanged at `1`: composite weight (10) and
+  sub-weights (50 / 30 / 20) are identical. This release only corrects
+  severity framing + spec-accuracy of the validity predicate and adds
+  informational checks. Spec-valid H1-only files now correctly earn the
+  50-pt presence subscore they were previously denied.
+
+---
+
 ## [0.2.1] — 2026-05-06
 
 Closes the gap raised by the v0.2.0 review: the `.env.example` listed several
@@ -168,7 +217,8 @@ Initial public release. Skeleton + documentation + trust scaffolding.
   - Dependabot configuration
   - GitHub Actions workflows: trust check on PRs, OpenSSF Scorecard
 
-[Unreleased]: https://github.com/g-shevchenko/geo-audit/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/g-shevchenko/geo-audit/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/g-shevchenko/geo-audit/releases/tag/v0.2.2
 [0.2.1]: https://github.com/g-shevchenko/geo-audit/releases/tag/v0.2.1
 [0.2.0]: https://github.com/g-shevchenko/geo-audit/releases/tag/v0.2.0
 [0.1.0]: https://github.com/g-shevchenko/geo-audit/releases/tag/v0.1.0

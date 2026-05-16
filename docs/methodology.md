@@ -72,7 +72,14 @@ not Google-specific extensions. Unrecognized types are warnings, not errors.
 - `/llms-full.txt` present and ≥50% of indexable content (30)
 - AI-bot access in `robots.txt` (GPTBot, ClaudeBot, PerplexityBot, Google-Extended) (20)
 
-Spec: [llmstxt.org](https://llmstxt.org).
+Spec: [llmstxt.org](https://llmstxt.org). Honesty: `llms.txt` is an
+inference-time content index, **not** a ranking signal — no major AI
+engine officially consumes a third-party `llms.txt` and Google has
+stated it does not use it. Scored as a controlled-narrative +
+AI-readiness signal, not predicted ranking. `/llms-full.txt` is a
+community convention (not in the spec). Validity follows the spec — the
+H1 is the only required element. See
+[docs/llmstxt-conformance.md](llmstxt-conformance.md).
 
 ### `brand-mentions` (0–100)
 
