@@ -16,6 +16,13 @@ WEIGHT = 10
 REQUIRES_API_KEYS: list[str] = []
 DESCRIPTION = "/llms.txt detection + AI-bot access in robots.txt."
 
+# llms.txt is an inference-time content index, NOT a ranking signal. No
+# major AI engine officially consumes a third-party llms.txt for answer
+# generation and Google has publicly stated it does not use it. This
+# module scores presence/conformance as a controlled-narrative + AI-
+# readiness signal — never as predicted ranking/visibility uplift.
+DOC_URL = "https://github.com/g-shevchenko/geo-audit/blob/main/docs/llmstxt-conformance.md"
+
 
 # Subscores: 50 + 30 + 20 = 100
 SUB_WEIGHTS = {
@@ -28,16 +35,18 @@ AI_BOTS = ["GPTBot", "ClaudeBot", "PerplexityBot", "Google-Extended", "anthropic
 
 
 def _is_valid_llms_txt(text: str) -> bool:
-    """Check basic llms.txt structure per llmstxt.org spec.
+    """Structural validity per the llmstxt.org spec.
 
-    Required: starts with H1 (# Site Name), has at least one section (## Header)
-    or one link line. Tolerant — most real llms.txt files vary.
+    Per the spec the **H1 is the only required element**; a blockquote
+    summary and ``## `` sections are recommended quality, not validity
+    gates. We therefore treat a non-trivial document with an H1 as
+    structurally valid and surface a missing summary/sections as quality
+    findings rather than failing the file outright. (Earlier versions
+    incorrectly also required an H2 or a link line.)
     """
     if not text or len(text.strip()) < 20:
         return False
-    has_h1 = bool(re.search(r"^# .+", text, re.MULTILINE))
-    has_section_or_links = bool(re.search(r"^(##|- \[.+\]\(.+\))", text, re.MULTILINE))
-    return has_h1 and has_section_or_links
+    return bool(re.search(r"^# .+", text, re.MULTILINE))
 
 
 def _bot_allowed_in_robots(robots: str, bot: str) -> bool:
@@ -113,10 +122,10 @@ def run(args: ModuleArgs) -> ModuleResult:
         findings.append(Finding("P3", "/llms.txt present and valid", f"{base}/llms.txt → 200, {len(r1.text)} bytes"))
     else:
         actions.append(Finding(
-            "P0" if r1.status == 404 else "P1",
-            "Publish /llms.txt per llmstxt.org spec",
+            "P2",
+            "Publish /llms.txt — controlled-narrative + citability asset (not a ranking factor)",
             f"{base}/llms.txt → {r1.status or 'fetch error'}",
-            "https://llmstxt.org/",
+            DOC_URL,
         ))
 
     # 2. /llms-full.txt present
@@ -128,10 +137,31 @@ def run(args: ModuleArgs) -> ModuleResult:
         findings.append(Finding("P3", "/llms-full.txt present", f"{base}/llms-full.txt → 200, {len(r2.text)} bytes"))
     else:
         actions.append(Finding(
-            "P2", "Add /llms-full.txt with site content body",
+            "P3",
+            "Optional: /llms-full.txt (community convention — NOT part of the llms.txt spec)",
             f"{base}/llms-full.txt → {r2.status or 'fetch error'}",
-            "https://llmstxt.org/",
+            DOC_URL,
         ))
+
+    # 2b. Markdown page mirrors (llmstxt.org spec proposal 2) — informational
+    # only, no score weight. Spec: fileless URLs append index.html.md.
+    try:
+        rmd = fetch(f"{base}/index.html.md", user_agent=args.user_agent,
+                    timeout_s=args.timeout_s, cache_dir=args.cache_dir,
+                    no_cache=args.no_cache)
+        md_ok = rmd.status == 200 and len(rmd.text.strip()) >= 50
+    except Exception:
+        rmd, md_ok = None, False
+    if md_ok:
+        findings.append(Finding(
+            "P3", "Markdown page mirror detected (llms.txt spec proposal 2)",
+            f"{base}/index.html.md → 200, {len(rmd.text)} bytes", DOC_URL))
+    else:
+        actions.append(Finding(
+            "P3",
+            "Consider Markdown page mirrors: <url>.md (llms.txt spec proposal 2, rarely implemented)",
+            f"{base}/index.html.md → {(rmd.status if rmd else 'fetch error')}",
+            DOC_URL))
 
     # 3. AI bots allowed in robots.txt
     robots = args.robots_txt or ""
@@ -155,6 +185,16 @@ def run(args: ModuleArgs) -> ModuleResult:
             "https://platform.openai.com/docs/gptbot",
         ))
 
+    findings.append(Finding(
+        "P3",
+        "Note: llms.txt is not a ranking signal",
+        "No major AI engine officially consumes a third-party llms.txt for "
+        "answers; Google has stated it does not use it. Value is "
+        "controlled-narrative + AI-readiness at inference time, not "
+        "ranking/visibility uplift.",
+        DOC_URL,
+    ))
+
     score = sum(sub_scores.values())
     duration = int((time.time() - t0) * 1000)
 
@@ -168,6 +208,7 @@ def run(args: ModuleArgs) -> ModuleResult:
             **sub_scores,
             "llms_txt_status": r1.status,
             "llms_full_txt_status": r2.status,
+            "md_page_mirror_status": (rmd.status if rmd else None),
             "ai_bots_blocked": blocked_bots,
             "ai_bots_allowed": allowed_bots,
         },

@@ -83,3 +83,25 @@ def test_run_with_good_robots_full_score(good_robots):
     with patch("geo_audit.modules.llmstxt.fetch", side_effect=_stub):
         result = mod.run(_args(robots=good_robots))
     assert result.score == 100, result.score
+
+
+def test_valid_llms_txt_spec_minimal():
+    """Spec: the H1 is the only required element (no H2/links needed)."""
+    minimal = "# Acme Corp\n\n> Acme builds widgets for the global market.\n"
+    assert mod._is_valid_llms_txt(minimal) is True
+
+
+def test_invalid_llms_txt_no_h1():
+    assert mod._is_valid_llms_txt("## Section\n\n- [Home](https://e.com/)\n") is False
+
+
+def test_missing_llms_txt_is_not_p0(good_robots):
+    """Honesty: a missing /llms.txt must NOT be P0/P1 — it is not a ranking factor."""
+    with patch("geo_audit.modules.llmstxt.fetch") as m_fetch:
+        m_fetch.return_value = FetchResult(
+            url="x", final_url="x", status=404, headers={}, text="", duration_ms=10,
+        )
+        result = mod.run(_args(robots=good_robots))
+    high = [a for a in result.actions if a.priority in ("P0", "P1")]
+    assert high == [], f"missing llms.txt must not be high-priority: {[a.title for a in high]}"
+    assert any("not a ranking signal" in f.title.lower() for f in result.findings)
