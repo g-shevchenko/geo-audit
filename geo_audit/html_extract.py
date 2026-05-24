@@ -82,7 +82,8 @@ def jsonld_blocks(html: str) -> list[Any]:
 
 
 def collect_jsonld_types(node: Any, acc: set[str] | None = None) -> set[str]:
-    acc = acc or set()
+    if acc is None:
+        acc = set()
     if isinstance(node, dict):
         value = node.get("@type")
         values = value if isinstance(value, list) else [value]

@@ -50,3 +50,64 @@ def test_head_schema_gate_skips_verification_file(tmp_path):
     assert result.score is None
     assert result.sub_scores["skipped_verification_file"] is True
     assert result.actions == []
+
+
+def test_head_schema_gate_recognizes_jsonld_graph_types(tmp_path):
+    html = """
+    <html>
+      <head>
+        <title>AI Search FAQ</title>
+        <meta name="description" content="A practical AI Search visibility FAQ with schema graph markup and breadcrumb data.">
+        <meta property="og:title" content="AI Search FAQ">
+        <meta property="og:description" content="A practical AI Search visibility FAQ with schema graph markup and breadcrumb data.">
+        <meta property="og:image" content="https://example.com/og.png">
+        <link rel="canonical" href="https://example.com/faq">
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "What is AI Search visibility?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "It is the ability to be discovered and reused in AI-generated answers."
+                  }
+                }
+              ]
+            },
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://example.com/"
+                }
+              ]
+            }
+          ]
+        }
+        </script>
+      </head>
+      <body>
+        <nav>breadcrumb</nav>
+        <h1>AI Search FAQ</h1>
+        <section class="faq">
+          <details><summary>What is AI Search visibility?</summary><p>It is the ability to be discovered in answers.</p></details>
+        </section>
+      </body>
+    </html>
+    """
+    result = mod.run(_args(html, tmp_path, "https://example.com/faq"))
+    codes = {v["code"] for v in result.sub_scores["violations"]}
+    types = set(result.sub_scores["route"]["jsonld_types"])
+
+    assert "FAQPage" in types
+    assert "BreadcrumbList" in types
+    assert "missing_faq_schema" not in codes
+    assert "missing_breadcrumb_schema" not in codes
