@@ -111,3 +111,37 @@ def test_head_schema_gate_recognizes_jsonld_graph_types(tmp_path):
     assert "BreadcrumbList" in types
     assert "missing_faq_schema" not in codes
     assert "missing_breadcrumb_schema" not in codes
+
+
+def test_head_schema_gate_ignores_breadcrumb_css_without_markup(tmp_path):
+    html = """
+    <html>
+      <head>
+        <title>Homepage</title>
+        <meta name="description" content="A homepage with shared stylesheet rules but no visible breadcrumb navigation.">
+        <meta property="og:title" content="Homepage">
+        <meta property="og:description" content="A homepage with shared stylesheet rules but no visible breadcrumb navigation.">
+        <meta property="og:image" content="https://example.com/og.png">
+        <link rel="canonical" href="https://example.com/">
+        <style>
+          .breadcrumbs { display: inline-flex; }
+          .breadcrumbs a:hover { text-decoration: underline; }
+        </style>
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "url": "https://example.com/"
+        }
+        </script>
+      </head>
+      <body>
+        <h1>Homepage</h1>
+        <nav aria-label="Primary"><a href="/research/">Research</a></nav>
+      </body>
+    </html>
+    """
+    result = mod.run(_args(html, tmp_path))
+    codes = {v["code"] for v in result.sub_scores["violations"]}
+
+    assert "missing_breadcrumb_schema" not in codes

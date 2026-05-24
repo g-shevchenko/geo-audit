@@ -9,6 +9,7 @@ import re
 import time
 from typing import Any
 
+from geo_audit.html_extract import has_breadcrumb_markup
 from geo_audit.modules.base import Finding, ModuleArgs, ModuleResult
 
 NAME = "schema"
@@ -186,7 +187,7 @@ def run(args: ModuleArgs) -> ModuleResult:
     if _find_nodes_with_type(blocks, "BreadcrumbList"):
         sub_scores["breadcrumblist"] = SUB_WEIGHTS["breadcrumblist"]
         findings.append(Finding("P3", "BreadcrumbList schema present", ""))
-    elif _has_html_pattern(html, r"<nav[^>]*aria-label=[\"'][^\"']*breadcrumb") or _has_html_pattern(html, r"breadcrumb"):
+    elif has_breadcrumb_markup(html):
         actions.append(Finding(
             "P2", "Add BreadcrumbList schema",
             "Breadcrumb-like markup detected but no BreadcrumbList @type",
