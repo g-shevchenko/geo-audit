@@ -44,6 +44,8 @@ would unlock — never a crash. Run `geo-audit doctor` to see your status.
 
 | Module           | Scores                                                                                            | Required keys |
 |------------------|---------------------------------------------------------------------------------------------------|---------------|
+| `site-crawl-lite`| Sitemap-first route inventory: status, canonical, titles, meta, H1, JSON-LD, links, images        | none          |
+| `head-schema-gate` | Deterministic head/social/schema gate for SEO + AI citation readiness                           | none          |
 | `citability`     | LLM-citation likelihood: TL;DR, FAQ, numbered structure, source links, clear definitions (EN+RU)  | none          |
 | `schema`         | JSON-LD validator + suggester (Article, FAQPage, HowTo, Organization, Person, Product…)           | none          |
 | `llmstxt`        | Detects `/llms.txt`, `/llms-full.txt`, AI-bot access in robots.txt (GPTBot, ClaudeBot, …)         | none          |
@@ -302,6 +304,8 @@ geo-audit/
 │   ├── cli.py                        ← argparse, module registry
 │   ├── report.py                     ← PDF/JSON/MD writer
 │   └── modules/
+│       ├── site_crawl_lite.py        ← small-site crawl inventory
+│       ├── head_schema_gate.py       ← head/social/schema consistency gate
 │       ├── citability.py             ← LLM-citation scoring (open-source)
 │       ├── schema.py                 ← JSON-LD validator + suggester
 │       ├── llmstxt.py                ← /llms.txt detection + generation
@@ -415,7 +419,7 @@ We pin everything to specific versions. We do not use `latest`.
 |---------------|-------------------|------------------------------------------------------------------------------------|
 | **v0.1**      | April 2026 (now)  | Skeleton, TRUST manifest, README + docs, install scaffolding, CI workflows         |
 | v0.2          | May 2026          | First working modules (`citability`, `schema`, `llmstxt`), `report.json` format    |
-| v0.3          | June 2026         | `technical` (Lighthouse + SSR), `content` (EEAT + AI-detection)                    |
+| v0.3          | June 2026         | `site-crawl-lite`, `head-schema-gate`, `technical`, `content`                      |
 | v0.4          | July 2026         | `brand-mentions` with all 4 LLM providers, n8n node                                |
 | v0.5          | August 2026       | GitHub Action, multi-language reports (RU, EN, DE, ES, AR)                         |
 | v1.0          | Q4 2026           | Stable API, semver, plugin system for custom modules                               |

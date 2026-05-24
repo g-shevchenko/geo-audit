@@ -124,10 +124,14 @@ def cmd_audit(args: argparse.Namespace) -> int:
         no_cache=args.no_cache,
     )
 
-    print(f"==> Composite GEO Score: {_green(str(report.composite.score) + '/100')}")
-    print(f"    duration: {report.duration_ms}ms  |  modules used: {len(report.composite.modules_used)}/{len(report.composite.modules_used) + len(report.composite.modules_skipped)}")
-    if report.composite.modules_skipped:
-        print(f"    skipped: {_yellow(', '.join(report.composite.modules_skipped))}")
+    if report.composite.modules_used or report.composite.modules_skipped:
+        print(f"==> Composite GEO Score: {_green(str(report.composite.score) + '/100')}")
+        print(f"    duration: {report.duration_ms}ms  |  modules used: {len(report.composite.modules_used)}/{len(report.composite.modules_used) + len(report.composite.modules_skipped)}")
+        if report.composite.modules_skipped:
+            print(f"    skipped: {_yellow(', '.join(report.composite.modules_skipped))}")
+    else:
+        print("==> Composite GEO Score: n/a (selected modules are informational gates)")
+        print(f"    duration: {report.duration_ms}ms")
     print()
 
     print("=== Per-module ===")

@@ -65,6 +65,8 @@ KEY_HINTS = {
 
 # Module → required keys map. Every key here is OPTIONAL: missing → graceful degrade.
 MODULE_KEY_MATRIX: dict[str, dict[str, list[str]]] = {
+    "site-crawl-lite": {"required": [], "optional_any_of": []},
+    "head-schema-gate": {"required": [], "optional_any_of": []},
     "citability":    {"required": [], "optional_any_of": []},
     "schema":        {"required": [], "optional_any_of": []},
     "llmstxt":       {"required": [], "optional_any_of": []},

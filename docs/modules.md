@@ -47,6 +47,61 @@ class Finding:
 
 ---
 
+## Module: `site-crawl-lite`
+
+Small-site crawl inventory for SEO/GEO readiness.
+
+### CLI
+
+```bash
+geo-audit audit https://yoursite.com --modules site-crawl-lite
+```
+
+### What it checks
+
+- Fetches the homepage plus sitemap URLs (`quick` = homepage only, `full` = up to 50 URLs).
+- Respects `robots.txt`.
+- Records status, final URL, title, classic meta description, canonical, H1, word count, JSON-LD count/types, internal/outbound link counts, image alt counts, and `noindex`.
+- Reports route-level issues without requiring any API keys.
+
+### What it does NOT check
+
+- Enterprise crawl scale, log-file joins, JavaScript rendering at Screaming Frog / Sitebulb / Oncrawl depth.
+- Backlink authority or keyword volume.
+
+### Required API keys
+
+None. If `FIRECRAWL_API_KEY` is set, the normal fetcher can still use it as a fallback for hostile HTML targets.
+
+---
+
+## Module: `head-schema-gate`
+
+Deterministic head/social/schema consistency gate.
+
+### CLI
+
+```bash
+geo-audit audit https://yoursite.com --modules head-schema-gate
+```
+
+### What it checks
+
+- `<title>` presence and reasonable length.
+- Classic `<meta name="description">`.
+- Canonical link.
+- Visible H1.
+- `og:title`, `og:description`, `og:image`.
+- JSON-LD parse errors and missing JSON-LD.
+- Article author `sameAs`, BreadcrumbList, and FAQPage when the page contains matching signals.
+- Ownership verification files are skipped so they do not create false SEO failures.
+
+### Required API keys
+
+None.
+
+---
+
 ## Module: `citability`
 
 LLM-citation likelihood scoring.

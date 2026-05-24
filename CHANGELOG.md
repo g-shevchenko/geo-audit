@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **`site-crawl-lite` module.** Adds sitemap-first crawl inventory for small
+  sites: status, final URL, title, meta description, canonical, H1, word
+  count, JSON-LD count/types, internal/outbound link counts, image alt
+  counts, and accidental `noindex`.
+- **`head-schema-gate` module.** Adds a deterministic head/social/schema
+  gate for classic meta descriptions, canonical, OG tags, JSON-LD parse
+  errors, Article author `sameAs`, BreadcrumbList, and FAQPage signals.
+- Shared dependency-free HTML extraction helpers and fixture tests for the
+  new modules. The new modules are informational for now: they produce
+  scores and actions but do not change the composite GEO methodology v1.
+
+---
+
 ## [0.2.2] — 2026-05-16
 
 Corrects the `llmstxt` module's honesty framing and spec-accuracy. No
