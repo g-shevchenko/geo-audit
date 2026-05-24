@@ -57,3 +57,31 @@ def test_handles_empty_html():
     assert result.ran_in_degraded_mode is False  # Returns 0, not skipped — but with actions.
     titles = [a.title for a in result.actions]
     assert any("Add JSON-LD" in t for t in titles)
+
+
+def test_schema_ignores_breadcrumb_css_without_markup():
+    html = """
+    <html>
+      <head>
+        <style>
+          .breadcrumbs { display: inline-flex; }
+          .breadcrumbs a:hover { color: teal; }
+        </style>
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "url": "https://example.com/"
+        }
+        </script>
+      </head>
+      <body>
+        <h1>Homepage</h1>
+        <nav aria-label="Primary"><a href="/research/">Research</a></nav>
+      </body>
+    </html>
+    """
+    result = schema_mod.run(_args(html))
+    titles = [a.title for a in result.actions]
+
+    assert "Add BreadcrumbList schema" not in titles

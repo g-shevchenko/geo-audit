@@ -102,6 +102,25 @@ def has_jsonld_type(blocks: list[Any], type_name: str) -> bool:
     return type_name.lower() in {t.lower() for block in blocks for t in collect_jsonld_types(block)}
 
 
+def has_breadcrumb_markup(html: str) -> bool:
+    """Return true when breadcrumb is present in visible/semantic markup, not only CSS or prose."""
+    cleaned = re.sub(r"<script\b[^>]*>.*?</script>", " ", html or "", flags=re.DOTALL | re.IGNORECASE)
+    cleaned = re.sub(r"<style\b[^>]*>.*?</style>", " ", cleaned, flags=re.DOTALL | re.IGNORECASE)
+    cleaned = re.sub(r"<!--.*?-->", " ", cleaned, flags=re.DOTALL)
+    for match in re.finditer(r"<[^>]+>", cleaned, re.IGNORECASE | re.DOTALL):
+        tag = match.group(0)
+        if re.match(r"</", tag):
+            continue
+        tag_name_match = re.match(r"<\s*([a-z0-9:-]+)", tag, re.IGNORECASE)
+        tag_name = tag_name_match.group(1).lower() if tag_name_match else ""
+        if tag_name in {"script", "style", "meta", "link"}:
+            continue
+        for attr in ("aria-label", "class", "id", "itemtype", "itemprop", "typeof"):
+            if "breadcrumb" in attr_from_tag(tag, attr).lower():
+                return True
+    return False
+
+
 def absolute_url(base_url: str, href: str) -> str:
     if not href or href.startswith(("mailto:", "tel:", "javascript:", "#")):
         return ""

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import time
 
-from geo_audit.html_extract import has_jsonld_type, jsonld_blocks, route_snapshot
+from geo_audit.html_extract import has_breadcrumb_markup, has_jsonld_type, jsonld_blocks, route_snapshot
 from geo_audit.modules.base import Finding, ModuleArgs, ModuleResult
 
 NAME = "head-schema-gate"
@@ -85,7 +85,7 @@ def run(args: ModuleArgs) -> ModuleResult:
     if has_jsonld_type(blocks, "Article") or has_jsonld_type(blocks, "BlogPosting"):
         if "author" in html and "sameAs" not in html:
             _add(violations, "P1", "article_author_sameas", "Add author.sameAs to Article schema", "Article schema has author but no sameAs signal")
-    if "breadcrumb" in html.lower() and not has_jsonld_type(blocks, "BreadcrumbList"):
+    if has_breadcrumb_markup(html) and not has_jsonld_type(blocks, "BreadcrumbList"):
         _add(violations, "P2", "missing_breadcrumb_schema", "Add BreadcrumbList schema", "Breadcrumb-like text/markup found without BreadcrumbList JSON-LD")
     if ("<details" in html.lower() or "faq" in html.lower()) and not has_jsonld_type(blocks, "FAQPage"):
         _add(violations, "P1", "missing_faq_schema", "Add FAQPage schema", "FAQ-like content found without FAQPage JSON-LD")
