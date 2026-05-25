@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`schema` recognizes CollectionPage hubs.** Hub/index pages can now earn
+  the primary page-schema score with `CollectionPage` plus
+  `hasPart` / `mainEntity` / `about` / `mentions`, instead of being
+  incorrectly treated as article-like pages that need `Article` JSON-LD.
 - **`site-crawl-lite` module.** Adds sitemap-first crawl inventory for small
   sites: status, final URL, title, meta description, canonical, H1, word
   count, JSON-LD count/types, internal/outbound link counts, image alt

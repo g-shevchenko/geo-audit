@@ -151,7 +151,7 @@ JSON-LD validator + suggester.
 - All JSON-LD blocks parse as valid JSON
 - Each block validates against its declared `@type`
 - Required properties for each type are present
-- Suggested types based on page content (Article on blog posts, Product on /shop, etc.)
+- Suggested types based on page content (Article on blog posts, CollectionPage on hub pages, Product on /shop, etc.)
 
 ### Required API keys
 

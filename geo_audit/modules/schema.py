@@ -20,6 +20,7 @@ DESCRIPTION = "JSON-LD schema.org validator + suggester."
 # Sub-check weights (per methodology.md).
 SUB_WEIGHTS = {
     "article_with_author_sameas":   15,
+    "collectionpage_for_hub":       15,
     "organization_with_sameas":     15,
     "faqpage_for_faq_blocks":       15,
     "howto_for_steps":              10,
@@ -89,8 +90,36 @@ def _find_nodes_with_type(node: Any, type_name: str) -> list[dict]:
     return out
 
 
+def _node_has_type(node: Any, type_name: str) -> bool:
+    if not isinstance(node, dict):
+        return False
+    t = node.get("@type")
+    types = [t] if isinstance(t, str) else (t if isinstance(t, list) else [])
+    return any(isinstance(x, str) and x.lower() == type_name.lower() for x in types)
+
+
+def _find_page_level_nodes_with_type(blocks: list[Any], type_name: str) -> list[dict]:
+    """Find root or @graph-level nodes, without counting nested references."""
+    out: list[dict] = []
+    for block in blocks:
+        candidates = block if isinstance(block, list) else [block]
+        for candidate in candidates:
+            if not isinstance(candidate, dict):
+                continue
+            if _node_has_type(candidate, type_name):
+                out.append(candidate)
+            graph = candidate.get("@graph")
+            if isinstance(graph, list):
+                out.extend(node for node in graph if _node_has_type(node, type_name))
+    return out
+
+
 def _has_html_pattern(html: str, pattern: str) -> bool:
     return bool(re.search(pattern, html, re.IGNORECASE | re.DOTALL))
+
+
+def _has_collectionpage_hub_shape(collection_page: dict) -> bool:
+    return any(collection_page.get(k) for k in ("hasPart", "mainEntity", "about", "mentions"))
 
 
 def run(args: ModuleArgs) -> ModuleResult:
@@ -107,8 +136,15 @@ def run(args: ModuleArgs) -> ModuleResult:
 
     parse_errors = sum(1 for b in blocks if isinstance(b, dict) and b.get("_parse_error"))
 
-    # 1. Article / BlogPosting with author.sameAs
-    articles = _find_nodes_with_type(blocks, "Article") + _find_nodes_with_type(blocks, "BlogPosting") + _find_nodes_with_type(blocks, "NewsArticle")
+    # 1. Primary page schema:
+    #    - Article / BlogPosting with author.sameAs for article pages.
+    #    - CollectionPage with hasPart/mainEntity/about for hub/index pages.
+    articles = (
+        _find_page_level_nodes_with_type(blocks, "Article")
+        + _find_page_level_nodes_with_type(blocks, "BlogPosting")
+        + _find_page_level_nodes_with_type(blocks, "NewsArticle")
+    )
+    collection_pages = _find_page_level_nodes_with_type(blocks, "CollectionPage")
     if articles:
         for a in articles:
             author = a.get("author")
@@ -122,6 +158,20 @@ def run(args: ModuleArgs) -> ModuleResult:
                 "P1", "Add author.sameAs to Article schema",
                 f"Found {len(articles)} Article/BlogPosting blocks but none have author.sameAs",
                 "https://schema.org/author",
+            ))
+    elif collection_pages:
+        if any(_has_collectionpage_hub_shape(c) for c in collection_pages):
+            sub_scores["collectionpage_for_hub"] = SUB_WEIGHTS["collectionpage_for_hub"]
+            findings.append(Finding(
+                "P3",
+                "CollectionPage schema for hub page found",
+                "CollectionPage has hasPart/mainEntity/about/mentions",
+            ))
+        else:
+            actions.append(Finding(
+                "P2", "Enrich CollectionPage schema for hub pages",
+                f"Found {len(collection_pages)} CollectionPage block(s) but none expose hasPart/mainEntity/about/mentions",
+                "https://schema.org/CollectionPage",
             ))
     else:
         # Article schema is optional — only an action if the page LOOKS like an article.
