@@ -54,7 +54,9 @@ in 2025–2026.
 
 JSON-LD validation + suggestion. Score = (passing checks ÷ applicable checks) × 100.
 
-- `Article` or `BlogPosting` with `author.sameAs` (15)
+- Primary page schema (15):
+  - article pages: `Article` or `BlogPosting` with `author.sameAs`
+  - hub/index pages: `CollectionPage` with `hasPart`, `mainEntity`, `about`, or `mentions`
 - `Organization` on homepage with `sameAs` to social profiles (15)
 - `FAQPage` for FAQ blocks (15)
 - `HowTo` for stepped instructions (10)

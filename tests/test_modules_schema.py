@@ -85,3 +85,97 @@ def test_schema_ignores_breadcrumb_css_without_markup():
     titles = [a.title for a in result.actions]
 
     assert "Add BreadcrumbList schema" not in titles
+
+
+def test_collectionpage_hub_scores_without_article_action():
+    html = """
+    <html>
+      <head>
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "CollectionPage",
+              "name": "Research archive",
+              "url": "https://example.com/research/",
+              "about": "AI Search visibility research",
+              "hasPart": [
+                {
+                  "@type": "Article",
+                  "name": "What AI systems cite",
+                  "url": "https://example.com/research/what-ai-systems-cite/"
+                }
+              ]
+            },
+            {
+              "@type": "Organization",
+              "name": "Humanswith.ai",
+              "sameAs": ["https://www.linkedin.com/company/humanswith-ai"]
+            },
+            {
+              "@type": "Person",
+              "name": "Gregory Shevchenko",
+              "jobTitle": "Founder",
+              "worksFor": {"@type": "Organization", "name": "Humanswith.ai"}
+            },
+            {
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "What should I cite?",
+                  "acceptedAnswer": {"@type": "Answer", "text": "Cite the canonical research."}
+                }
+              ]
+            },
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": []
+            }
+          ]
+        }
+        </script>
+      </head>
+      <body>
+        <h1>Research</h1>
+        <article class="essay"><h2>What AI systems cite</h2></article>
+        <article class="essay"><h2>AI visibility case studies</h2></article>
+      </body>
+    </html>
+    """
+    result = schema_mod.run(_args(html, url="https://example.com/research/"))
+    action_titles = [a.title for a in result.actions]
+    finding_titles = [f.title for f in result.findings]
+
+    assert result.sub_scores["collectionpage_for_hub"] == 15
+    assert result.score >= 75
+    assert "Add Article schema to article-like pages" not in action_titles
+    assert "CollectionPage schema for hub page found" in finding_titles
+
+
+def test_article_like_page_without_collectionpage_still_requests_article_schema():
+    html = """
+    <html>
+      <head>
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Example",
+          "sameAs": ["https://www.linkedin.com/company/example"]
+        }
+        </script>
+      </head>
+      <body>
+        <article>
+          <h1>Article without JSON-LD</h1>
+          <time datetime="2026-05-25">25 May 2026</time>
+        </article>
+      </body>
+    </html>
+    """
+    result = schema_mod.run(_args(html, url="https://example.com/blog/post/"))
+    titles = [a.title for a in result.actions]
+
+    assert "Add Article schema to article-like pages" in titles
