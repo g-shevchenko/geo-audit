@@ -46,9 +46,10 @@ would unlock — never a crash. Run `geo-audit doctor` to see your status.
 |------------------|---------------------------------------------------------------------------------------------------|---------------|
 | `site-crawl-lite`| Sitemap-first route inventory: status, canonical, titles, meta, H1, JSON-LD, links, images        | none          |
 | `head-schema-gate` | Deterministic head/social/schema gate for SEO + AI citation readiness                           | none          |
+| `ai-search-technical` | Zero-key AI Search technical gate: crawler access, noindex, initial HTML, canonical, sitemap | none          |
 | `citability`     | LLM-citation likelihood: TL;DR, FAQ, numbered structure, source links, clear definitions (EN+RU)  | none          |
 | `schema`         | JSON-LD validator + suggester (Article, FAQPage, HowTo, Organization, Person, Product…)           | none          |
-| `llmstxt`        | Detects `/llms.txt`, `/llms-full.txt`, AI-bot access in robots.txt (GPTBot, ClaudeBot, …)         | none          |
+| `llmstxt`        | Detects `/llms.txt`, `/llms-full.txt`, AI-bot access in robots.txt (GPTBot, OAI-SearchBot, ClaudeBot, …) | none          |
 | `crawlers`       | Full bot access map (AI / search / social) — informational                                        | none          |
 | `technical`      | Indexability (HTTPS, sitemap, robots, canonical, SSR/SSG, viewport) + Core Web Vitals             | optional `PAGESPEED_API_KEY` (free) for CWV |
 | `content`        | E-E-A-T signals + AI-detection (built-in heuristic) + readability (Flesch / Pushkin)              | none          |
@@ -306,6 +307,7 @@ geo-audit/
 │   └── modules/
 │       ├── site_crawl_lite.py        ← small-site crawl inventory
 │       ├── head_schema_gate.py       ← head/social/schema consistency gate
+│       ├── ai_search_technical.py    ← AI Search crawler + parseability gate
 │       ├── citability.py             ← LLM-citation scoring (open-source)
 │       ├── schema.py                 ← JSON-LD validator + suggester
 │       ├── llmstxt.py                ← /llms.txt detection + generation

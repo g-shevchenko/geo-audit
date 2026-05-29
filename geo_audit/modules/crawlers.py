@@ -18,8 +18,9 @@ DESCRIPTION = "robots.txt parser + AI/search/social bot access map."
 
 CRAWLERS = {
     "AI assistants": [
-        "GPTBot", "ChatGPT-User", "anthropic-ai", "ClaudeBot",
-        "PerplexityBot", "Google-Extended", "Applebot-Extended",
+        "GPTBot", "ChatGPT-User", "OAI-SearchBot", "anthropic-ai",
+        "ClaudeBot", "Claude-SearchBot", "PerplexityBot",
+        "Google-Extended", "Applebot-Extended",
         "Bytespider", "Yandex-Neuro",
     ],
     "Search engines": [

@@ -22,9 +22,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`head-schema-gate` module.** Adds a deterministic head/social/schema
   gate for classic meta descriptions, canonical, OG tags, JSON-LD parse
   errors, Article author `sameAs`, BreadcrumbList, and FAQPage signals.
+- **`ai-search-technical` module.** Adds a public-safe, zero-key technical
+  gate for AI Search readiness: crawler access, page-level `noindex`,
+  initial-HTML parseability, canonical presence, and sitemap discovery.
 - Shared dependency-free HTML extraction helpers and fixture tests for the
   new modules. The new modules are informational for now: they produce
   scores and actions but do not change the composite GEO methodology v1.
+
+### Changed
+
+- Updated AI crawler coverage in `llmstxt` and `crawlers` to include
+  OAI-SearchBot and Claude-SearchBot.
 
 ---
 

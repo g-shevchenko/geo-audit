@@ -102,6 +102,36 @@ None.
 
 ---
 
+## Module: `ai-search-technical`
+
+Public-safe technical gate for AI Search / answer-engine crawlability.
+
+### CLI
+
+```bash
+geo-audit audit https://yoursite.com --modules ai-search-technical
+```
+
+### What it checks
+
+- `robots.txt` access for Googlebot, Bingbot, OAI-SearchBot, Claude-SearchBot, ClaudeBot, and PerplexityBot.
+- Page-level `noindex` in `<meta name="robots">` and `X-Robots-Tag`.
+- Main content parseability in the initial HTML, before JavaScript execution.
+- Canonical link presence.
+- Sitemap discovery via `sitemap.xml` or a `Sitemap:` directive in `robots.txt`.
+
+### What it does NOT check
+
+- Live search/AI ranking, citations, or model outputs.
+- Logged-in pages, WAF behavior, geo-specific blocking, or browser-only rendering beyond the first HTML response.
+- Private crawler infrastructure, paid SERP checks, or proprietary calibration.
+
+### Required API keys
+
+None.
+
+---
+
 ## Module: `citability`
 
 LLM-citation likelihood scoring.
@@ -175,7 +205,7 @@ None. We use a bundled Schema.org JSON Schema. Optionally hits
 
 - `/llms.txt` exists and is reachable
 - Content matches the [llmstxt.org](https://llmstxt.org) spec
-- `robots.txt` allows GPTBot, ClaudeBot, PerplexityBot, Google-Extended
+- `robots.txt` allows GPTBot, ChatGPT-User, OAI-SearchBot, ClaudeBot, Claude-SearchBot, anthropic-ai, PerplexityBot, Google-Extended
 
 ### Required API keys
 
