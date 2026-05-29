@@ -10,6 +10,7 @@ from typing import Optional
 from geo_audit.modules import schema as schema_mod
 from geo_audit.modules import site_crawl_lite as site_crawl_mod
 from geo_audit.modules import head_schema_gate as head_schema_mod
+from geo_audit.modules import ai_search_technical as ai_search_technical_mod
 from geo_audit.modules import llmstxt as llmstxt_mod
 from geo_audit.modules import crawlers as crawlers_mod
 from geo_audit.modules import technical as technical_mod
@@ -21,6 +22,7 @@ from geo_audit.modules import brand_mentions as brand_mod
 REGISTRY: dict[str, ModuleType] = {
     site_crawl_mod.NAME: site_crawl_mod,
     head_schema_mod.NAME: head_schema_mod,
+    ai_search_technical_mod.NAME: ai_search_technical_mod,
     schema_mod.NAME:     schema_mod,
     llmstxt_mod.NAME:    llmstxt_mod,
     crawlers_mod.NAME:   crawlers_mod,
@@ -32,8 +34,9 @@ REGISTRY: dict[str, ModuleType] = {
 
 
 DEFAULT_ORDER = [
-    "site-crawl-lite", "head-schema-gate", "schema", "llmstxt", "crawlers",
-    "citability", "content", "technical", "brand-mentions",
+    "site-crawl-lite", "head-schema-gate", "ai-search-technical", "schema",
+    "llmstxt", "crawlers", "citability", "content", "technical",
+    "brand-mentions",
 ]
 
 

@@ -31,7 +31,11 @@ SUB_WEIGHTS = {
     "ai_bots_allowed_in_robots":20,
 }
 
-AI_BOTS = ["GPTBot", "ClaudeBot", "PerplexityBot", "Google-Extended", "anthropic-ai", "ChatGPT-User"]
+AI_BOTS = [
+    "GPTBot", "ChatGPT-User", "OAI-SearchBot",
+    "ClaudeBot", "Claude-SearchBot", "anthropic-ai",
+    "PerplexityBot", "Google-Extended",
+]
 
 
 def _is_valid_llms_txt(text: str) -> bool:

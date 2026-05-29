@@ -32,6 +32,12 @@ which modules were excluded.
 Weights sum to 100. Reweighting requires a methodology RFC and a major
 version bump.
 
+Informational gate modules such as `site-crawl-lite`, `head-schema-gate`,
+and `ai-search-technical` can produce scores and actions without changing
+the composite GEO Score. They are designed for CI/readiness gates and
+diagnostic diffs; methodology v1 remains comparable because their weight is
+zero.
+
 ## Per-module scoring
 
 ### `citability` (0–100)
@@ -113,6 +119,25 @@ Two halves:
 - Canonical present and valid (5)
 - SSR/SSG: content present in initial HTML (10)
 - Mobile viewport meta (5)
+
+### `ai-search-technical` (0–100, informational)
+
+This module is a zero-weight technical gate for AI Search readiness. It
+turns crawler-access and initial-HTML problems into a deterministic pass /
+warn / fail signal without changing the composite methodology.
+
+- Page-level `noindex` or an explicit crawler block for `Googlebot` is a
+  fail-level issue.
+- Blocks for answer-engine crawlers such as `Bingbot`, `OAI-SearchBot`,
+  `Claude-SearchBot`, and `PerplexityBot` are warn-level issues.
+- Thin initial HTML is a warning below 1,000 visible characters and a
+  fail-level issue below 300 visible characters, because JavaScript-only
+  content is fragile for crawlers and AI answer systems.
+- Missing canonical or sitemap signals are warn-level issues.
+
+Sources: Google Search Central AI optimization guidance, Google robots and
+JavaScript SEO docs, OpenAI crawler docs, Anthropic crawler docs,
+Perplexity crawler docs, and Bing Webmaster Guidelines.
 
 ### `content` (0–100)
 
