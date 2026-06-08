@@ -1,4 +1,4 @@
 # Dev/test dependencies for geo-audit.
 -r requirements.txt
 pytest>=8,<9
-pytest-mock>=3.12,<4
+pytest-mock>=3.15.1,<4
