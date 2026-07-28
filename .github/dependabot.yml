@@ -16,6 +16,10 @@ updates:
     labels:
       - "dependencies"
       - "github-actions"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
 
   # Python deps (when requirements.txt lands in v0.2)
   - package-ecosystem: pip
