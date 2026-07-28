@@ -2,7 +2,7 @@
 # or `pip install 'geo-audit[pdf,llm,ai-detect]'` from pyproject.
 
 # PDF rendering
-weasyprint>=60,<63
+weasyprint>=69.0,<70
 markdown>=3.5,<4
 
 # Optional LLM SDKs (modules will use HTTP directly if these aren't installed)
